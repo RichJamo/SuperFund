@@ -1,1 +1,61 @@
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+/.pnp
+.pnp.js
+
+# dotenv environment variables file
 .env
+
+# macOS files
+.DS_Store
+
+# Build directory
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+# Cache
+.cache/
+.vscode/
+.idea/
+
+# React Native
+.expo/
+.expo-shared/
+
+# Ignore packages built from source code
+lib-cov/
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.out
+*.pid
+
+# Optional npm cache directory
+.npm
+
+# Parcel-b
