@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { getSigner } from './utils/ethers'; // Adjust the path if needed
-import { depositToVault, withdrawFromVault } from './utils/superform'; // Adjust the path if needed
+import { ethers } from 'ethers';
+import { getSigner } from './utils/ethers';
+import { depositToVault, withdrawFromVault } from './utils/superform';
+import { generatePrefilledData } from './utils/prefilledData'; // Import the utility function
 
 const VaultList = () => {
   const [vaults, setVaults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [outputAmount, setOutputAmount] = useState('');
 
   useEffect(() => {
-    // Fetch vault data from the subgraph and set it in state
     fetchVaultData();
   }, []);
 
@@ -41,7 +44,6 @@ const VaultList = () => {
     );
 
     const { data } = await response.json();
-    // Combine vaultBasics and vaultDatas as needed
     setVaults(
       data.vaultBasics.map((vault, index) => ({
         ...vault,
@@ -51,10 +53,33 @@ const VaultList = () => {
     setLoading(false);
   };
 
-  const handleDeposit = async (vaultId: string) => {
+  const handleDeposit = async () => {
     try {
+      //   const vault = vaults.find((v) => v.id === vaultId);
+
+      //   if (!vault) {
+      //     alert('Vault not found');
+      //     return;
+      //   }
+
       const signer = await getSigner();
-      await depositToVault(vaultId, '1.0', signer); // Replace '1.0' with the actual amount you want to deposit
+      console.log(signer);
+      const prefilledData = generatePrefilledData();
+
+      const userData = {
+        amount: depositAmount,
+        outputAmount,
+      };
+      console.log(userData);
+      const combinedData = {
+        ...userData,
+        ...prefilledData,
+      };
+      console.log(combinedData);
+      const superformData: [typeof combinedData] = [combinedData];
+      // console.log(superformData);
+      await depositToVault(superformData, signer);
+
       alert('Deposit successful');
     } catch (error) {
       console.error('Error depositing:', error);
@@ -65,7 +90,7 @@ const VaultList = () => {
   const handleWithdraw = async (vaultId: string) => {
     try {
       const signer = await getSigner();
-      await withdrawFromVault(vaultId, '1.0', signer); // Replace '1.0' with the actual amount you want to withdraw
+      await withdrawFromVault(vaultId, '1.0', signer);
       alert('Withdrawal successful');
     } catch (error) {
       console.error('Error withdrawing:', error);
@@ -81,28 +106,16 @@ const VaultList = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Name
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Symbol
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Total Assets
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -132,6 +145,22 @@ const VaultList = () => {
                   >
                     Withdraw
                   </button>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Amount"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      className="border mt-2 p-2 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Output Amount"
+                      value={outputAmount}
+                      onChange={(e) => setOutputAmount(e.target.value)}
+                      className="border mt-2 p-2 rounded"
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
