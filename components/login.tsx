@@ -1,7 +1,11 @@
-import { ConnectButton } from 'thirdweb/react';
+import { ConnectButton, useActiveAccount } from 'thirdweb/react';
 import { client, chain } from '../utils/constants';
+import Counter from './counter';
 
 const Login: React.FC = () => {
+  console.log('got here');
+  const account = useActiveAccount();
+  console.log('address', account?.address);
   return (
     <div
       style={{
@@ -12,7 +16,16 @@ const Login: React.FC = () => {
         height: '100vh',
       }}
     >
-      <ConnectButton client={client} chain={chain} />
+      {account ? (
+        <div style={{ textAlign: 'center' }}>
+          <ConnectButton client={client} chain={chain} />
+          <Counter />
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center' }}>
+          <ConnectButton client={client} chain={chain} />
+        </div>
+      )}
     </div>
   );
 };
