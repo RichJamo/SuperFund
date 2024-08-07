@@ -1,17 +1,4 @@
-import { createThirdwebClient, defineChain, getContract } from "thirdweb";
-import { optimism } from "thirdweb/chains";
-// import ERC20ABI from "./ERC20ABI.json"
-const CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID;
-console.log(CLIENT_ID)
-export const client = createThirdwebClient({
-  clientId: CLIENT_ID as string,
-});
-
-export const chain = defineChain(optimism);
-
-const usdcAddress = '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85'; // USDC contract address on Optimism mainnet
-    // Minimal ERC-20 ABI, just enough to get the balanceOf function
-const ERC20ABI = [
+[
   {
     "inputs": [
       {
@@ -107,10 +94,3 @@ const ERC20ABI = [
     "type": "function"
   }
 ]
-
-// export const CONTRACT = getContract({
-//   client: client,
-//   chain: chain,
-//   address: usdcAddress,
-//   abi: ERC20ABI
-// })
