@@ -71,12 +71,14 @@ const VaultList = () => {
         outputAmount,
       };
       console.log(userData);
-      const combinedData = {
-        ...userData,
-        ...prefilledData,
-      };
-      console.log(combinedData);
-      const superformData: [typeof combinedData] = [combinedData];
+      // const combinedData = {
+      //   ...userData,
+      //   ...prefilledData,
+      // };
+      console.log(prefilledData);
+      // const superformData: [typeof prefilledData] = [prefilledData];
+      const superformData = [prefilledData];
+
       // console.log(superformData);
       await depositToVault(superformData, signer);
 

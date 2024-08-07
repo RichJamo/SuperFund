@@ -24,12 +24,22 @@ const MetaMaskConnector: React.FC = () => {
 
   const handleAccountChange = async (account: string) => {
     setAccount(account);
+
     // Fetch the balance for the connected account
-    const provider = new ethers.JsonRpcProvider(
-      `https://mainnet.infura.io/v3/${import.meta.env.VITE_INFURA_PROJECT_ID}`
-    );
-    const balance = await provider.getBalance(account);
-    setBalance(ethers.formatEther(balance));
+    const provider = new ethers.BrowserProvider(window.ethereum);
+
+    const usdcAddress = '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85'; // USDC contract address on Optimism mainnet
+    // Minimal ERC-20 ABI, just enough to get the balanceOf function
+    const erc20Abi = [
+      'function balanceOf(address owner) view returns (uint256)',
+    ];
+    // Create a new contract instance using the provider
+    const usdcContract = new ethers.Contract(usdcAddress, erc20Abi, provider);
+    // Fetch the USDC balance
+    let balance = await usdcContract.balanceOf(account);
+    // USDC typically has 6 decimal places, so convert the balance
+    balance = ethers.formatUnits(balance, 6);
+    setBalance(balance);
   };
 
   const connectWallet = async () => {
@@ -52,7 +62,7 @@ const MetaMaskConnector: React.FC = () => {
       {account ? (
         <div>
           <p className="text-lg font-semibold">Connected Account: {account}</p>
-          <p className="text-lg">Balance: {balance} ETH</p>
+          <p className="text-lg">USDC balance: {balance} USDC</p>
         </div>
       ) : (
         <button
