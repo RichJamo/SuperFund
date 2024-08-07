@@ -1,0 +1,10 @@
+[
+  {
+    "username": "Alice",
+    "walletAddress": "0x1234567890abcdef1234567890abcdef12345678"
+  },
+  {
+    "username": "Bob",
+    "walletAddress": "0xabcdef1234567890abcdef1234567890abcdef12"
+  }
+]
