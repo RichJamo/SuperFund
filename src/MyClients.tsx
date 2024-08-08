@@ -4,48 +4,35 @@ import NewUserModal from "./NewUserModal";
 import { getContract } from "thirdweb";
 import { optimism } from "thirdweb/chains";
 import { client } from "./client";
-import { createWallet } from "thirdweb/wallets";
+import { useReadContract } from "thirdweb/react";
 
 const USDC_CONTRACT_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
-const wallet = createWallet("io.metamask");
-console.log(wallet);
-// connect the wallet, this returns a promise that resolves to the connected account
-const account = await wallet.connect({
-  // pass the client you created with `createThirdwebClient()`
-  client
-});
-console.log(account);
-// get a contract
+
 const contract = getContract({
-  // the client you have created via `createThirdwebClient()`
   client,
-  // the chain the contract is deployed on
   chain: optimism,
-  // the contract's address
   address: USDC_CONTRACT_ADDRESS,
-  // OPTIONAL: the contract's abi
   abi: [
     {
       type: "function",
       name: "balanceOf",
-      inputs: [
-        {
-          type: "address",
-          name: "account"
-        }
-      ],
-      outputs: [
-        {
-          type: "uint256",
-          name: "balance"
-        }
-      ],
+      inputs: [{ type: "address", name: "account" }],
+      outputs: [{ type: "uint256", name: "balance" }],
       stateMutability: "view"
     }
   ]
 });
-console.log(contract);
-// const result = await contract.balanceOf(account);
+
+function useBalanceOfContract(walletAddress: string | undefined) {
+  const { data, isLoading } = useReadContract({
+    contract,
+    method: "balanceOf",
+    params: [walletAddress || ""], // Wrap in an array
+    queryOptions: { enabled: !!walletAddress } // Enable query if account is defined
+  });
+
+  return { data, isLoading };
+}
 
 export default function MyClients() {
   const [usernames, setUsernames] = useState<string[]>(
@@ -77,13 +64,20 @@ export default function MyClients() {
           </tr>
         </thead>
         <tbody>
-          {usernames.map(username => (
-            <tr key={username}>
-              <td className="py-2 px-4 border-b">{username}</td>
-              <td className="py-2 px-4 border-b">{userMap[username]}</td>
-              <td className="py-2 px-4 border-b">10000</td>
-            </tr>
-          ))}
+          {usernames.map(username => {
+            const walletAddress = userMap[username];
+            const { data, isLoading } = useBalanceOfContract(walletAddress);
+
+            return (
+              <tr key={username}>
+                <td className="py-2 px-4 border-b">{username}</td>
+                <td className="py-2 px-4 border-b">{walletAddress}</td>
+                <td className="py-2 px-4 border-b">
+                  {isLoading ? "Loading..." : data ? data.toString() : "N/A"}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       <button
