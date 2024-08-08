@@ -49,7 +49,9 @@ const VaultList = () => {
         totalAssets: formatTotalAssets(
           data.vaultDatas[index].totalAssets,
           data.vaultBasics[index].decimals
-        )
+        ),
+        previewPPS: data.vaultDatas[index].previewPPS, // Add previewPPS
+        pricePerVaultShare: data.vaultDatas[index].pricePerVaultShare // Add pricePerVaultShare
       }))
     );
     setLoading(false);
