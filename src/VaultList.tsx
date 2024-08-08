@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
 import { depositToVault, withdrawFromVault } from "./utils/superform";
-import { generatePrefilledData } from "./utils/prefilledData"; // Import the utility function
+import { generatePrefilledData } from "./utils/prefilledData";
+import Dropdown from "./Dropdown";
+import usersData from "./data/users.json";
 
 const VaultList = () => {
   const [vaults, setVaults] = useState([]);
@@ -9,9 +10,27 @@ const VaultList = () => {
   const [depositAmount, setDepositAmount] = useState("");
   const [outputAmount, setOutputAmount] = useState("");
 
+  // State for usernames, selected username, and userMap for wallet addresses
+  const [usernames, setUsernames] = useState<string[]>([]);
+  const [selectedUsername, setSelectedUsername] = useState<string>("");
+  const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
+
   useEffect(() => {
     fetchVaultData();
+    resolveUsernamesAndAddresses();
   }, []);
+
+  // Resolve both usernames and wallet addresses
+  const resolveUsernamesAndAddresses = () => {
+    const resolvedUsernames = usersData.map(user => user.username);
+    const resolvedUserMap = usersData.reduce((map, user) => {
+      map[user.username] = user.walletAddress;
+      return map;
+    }, {} as { [key: string]: string });
+
+    setUsernames(resolvedUsernames);
+    setUserMap(resolvedUserMap);
+  };
 
   const fetchVaultData = async () => {
     setLoading(true);
@@ -50,22 +69,15 @@ const VaultList = () => {
           data.vaultDatas[index].totalAssets,
           data.vaultBasics[index].decimals
         ),
-        previewPPS: data.vaultDatas[index].previewPPS, // Add previewPPS
-        pricePerVaultShare: data.vaultDatas[index].pricePerVaultShare // Add pricePerVaultShare
+        previewPPS: data.vaultDatas[index].previewPPS,
+        pricePerVaultShare: data.vaultDatas[index].pricePerVaultShare
       }))
     );
     setLoading(false);
   };
 
-  const handleDeposit = async () => {
+  const handleDeposit = async (vaultId: string) => {
     try {
-      //   const vault = vaults.find((v) => v.id === vaultId);
-
-      //   if (!vault) {
-      //     alert('Vault not found');
-      //     return;
-      //   }
-
       const signer = await ethers.Signer();
       console.log(signer);
       const prefilledData = generatePrefilledData();
@@ -75,15 +87,8 @@ const VaultList = () => {
         outputAmount
       };
       console.log(userData);
-      // const combinedData = {
-      //   ...userData,
-      //   ...prefilledData,
-      // };
-      console.log(prefilledData);
-      // const superformData: [typeof prefilledData] = [prefilledData];
       const superformData = [prefilledData];
 
-      // console.log(superformData);
       await depositToVault(superformData, signer);
 
       alert("Deposit successful");
@@ -106,6 +111,12 @@ const VaultList = () => {
 
   return (
     <div>
+      <h2 className="text-xl font-bold mb-4">Selected Client</h2>
+      <Dropdown
+        usernames={usernames}
+        selectedUsername={selectedUsername}
+        onSelect={username => setSelectedUsername(username)}
+      />
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -172,10 +183,8 @@ const VaultList = () => {
 
 // Helper function to format the total assets value
 function formatTotalAssets(totalAssets, decimals) {
-  // Convert the total assets value to a human-readable format using decimals
   const formattedValue = Number(totalAssets) / Math.pow(10, decimals);
-
-  // Format the value to two decimal places
   return formattedValue.toFixed(2);
 }
+
 export default VaultList;
