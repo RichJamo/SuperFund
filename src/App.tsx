@@ -42,7 +42,7 @@ export function App() {
   return (
     <main className="p-4 pb-10 min-h-[100vh] flex items-center justify-center container max-w-screen-lg mx-auto">
       <div className="py-20">
-        <Header />
+        {!account && <Header />}
         <div className="flex flex-col items-center mb-20">
           {!account ? (
             <ConnectButton
@@ -107,9 +107,7 @@ function Header() {
       </h1>
 
       <p className="text-zinc-300 text-base">
-        {account
-          ? "Here are your vaults."
-          : "Please connect your wallet to get started."}
+        Please connect your wallet to get started.
       </p>
     </header>
   );
