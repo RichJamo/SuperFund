@@ -17,6 +17,9 @@ export function App() {
   const [selectedUsername, setSelectedUsername] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
+  const [activeSection, setActiveSection] = useState<"vaults" | "clients">(
+    "vaults"
+  );
 
   useEffect(() => {
     // Initialize usernames and userMap from data file
@@ -39,9 +42,41 @@ export function App() {
     setIsModalOpen(false);
   };
 
+  // Mock function to fetch USDC balance (replace with actual logic)
+  const fetchUSDCBalance = (walletAddress: string) => {
+    return "1000 USDC"; // Replace with actual balance retrieval logic
+  };
+
   return (
-    <main className="p-4 pb-10 min-h-[100vh] flex items-center justify-center container max-w-screen-lg mx-auto">
-      <div className="py-20">
+    <main className="p-4 pb-10 min-h-[100vh] flex container max-w-screen-lg mx-auto">
+      {account && (
+        <nav className="w-3/8 bg-gray-800 text-white p-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tighter text-zinc-100">
+              SuperFund
+            </h1>
+          </div>
+          <ul className="space-y-4">
+            <li
+              className={`cursor-pointer ${
+                activeSection === "clients" ? "font-bold" : ""
+              }`}
+              onClick={() => setActiveSection("clients")}
+            >
+              My Clients
+            </li>
+            <li
+              className={`cursor-pointer ${
+                activeSection === "vaults" ? "font-bold" : ""
+              }`}
+              onClick={() => setActiveSection("vaults")}
+            >
+              Vaults
+            </li>
+          </ul>
+        </nav>
+      )}
+      <div className="flex-1 py-20 pl-6">
         {!account && <Header />}
         <div className="flex flex-col items-center mb-20">
           {!account ? (
@@ -54,32 +89,55 @@ export function App() {
             />
           ) : (
             <>
-              <Dropdown
-                usernames={usernames}
-                selectedUsername={selectedUsername}
-                onSelect={username => setSelectedUsername(username)}
-              />
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="p-2 bg-green-500 text-white rounded mt-4"
-              >
-                New Client
-              </button>
-              <NewUserModal
-                isOpen={isModalOpen}
-                onRequestClose={() => setIsModalOpen(false)}
-                onAddUser={handleAddUser}
-              />
-              <div className="mt-4">
-                {selectedUsername && (
-                  <div>
-                    <h2>Details for {selectedUsername}</h2>
-                    <p>Wallet Address: {userMap[selectedUsername]}</p>
-                    {/* Display more details as needed */}
-                  </div>
-                )}
-              </div>
-              <VaultList className="mt-8" />
+              {activeSection === "clients" && (
+                <>
+                  <h2 className="text-xl font-bold mb-4">My Clients</h2>
+                  <table className="min-w-full bg-white">
+                    <thead>
+                      <tr>
+                        <th className="py-2 px-4 border-b">Username</th>
+                        <th className="py-2 px-4 border-b">Wallet Address</th>
+                        <th className="py-2 px-4 border-b">USDC Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usernames.map(username => (
+                        <tr key={username}>
+                          <td className="py-2 px-4 border-b">{username}</td>
+                          <td className="py-2 px-4 border-b">
+                            {userMap[username]}
+                          </td>
+                          <td className="py-2 px-4 border-b">
+                            {fetchUSDCBalance(userMap[username])}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="p-2 bg-green-500 text-white rounded mt-4"
+                  >
+                    New Client
+                  </button>
+                  <NewUserModal
+                    isOpen={isModalOpen}
+                    onRequestClose={() => setIsModalOpen(false)}
+                    onAddUser={handleAddUser}
+                  />
+                </>
+              )}
+              {activeSection === "vaults" && (
+                <>
+                  <h2 className="text-xl font-bold mb-4">Selected Client</h2>
+                  <Dropdown
+                    usernames={usernames}
+                    selectedUsername={selectedUsername}
+                    onSelect={username => setSelectedUsername(username)}
+                  />
+                  <VaultList className="mt-8" />
+                </>
+              )}
             </>
           )}
         </div>
