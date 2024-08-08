@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
-// import { getSigner } from './utils/ethers';
 import { depositToVault, withdrawFromVault } from "./utils/superform";
 import { generatePrefilledData } from "./utils/prefilledData"; // Import the utility function
 
@@ -47,7 +46,10 @@ const VaultList = () => {
     setVaults(
       data.vaultBasics.map((vault, index) => ({
         ...vault,
-        totalAssets: data.vaultDatas[index].totalAssets
+        totalAssets: formatTotalAssets(
+          data.vaultDatas[index].totalAssets,
+          data.vaultBasics[index].decimals
+        )
       }))
     );
     setLoading(false);
@@ -155,13 +157,6 @@ const VaultList = () => {
                       onChange={e => setDepositAmount(e.target.value)}
                       className="border mt-2 p-2 rounded"
                     />
-                    <input
-                      type="text"
-                      placeholder="Output Amount"
-                      value={outputAmount}
-                      onChange={e => setOutputAmount(e.target.value)}
-                      className="border mt-2 p-2 rounded"
-                    />
                   </div>
                 </td>
               </tr>
@@ -173,4 +168,12 @@ const VaultList = () => {
   );
 };
 
+// Helper function to format the total assets value
+function formatTotalAssets(totalAssets, decimals) {
+  // Convert the total assets value to a human-readable format using decimals
+  const formattedValue = Number(totalAssets) / Math.pow(10, decimals);
+
+  // Format the value to two decimal places
+  return formattedValue.toFixed(2);
+}
 export default VaultList;
