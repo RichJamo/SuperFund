@@ -3,6 +3,40 @@ import { depositToVault, withdrawFromVault } from "./utils/superform";
 import { generatePrefilledData } from "./utils/prefilledData";
 import Dropdown from "./Dropdown";
 import usersData from "./data/users.json";
+import { useSendTransaction } from "thirdweb/react";
+import { getContract, prepareContractCall } from "thirdweb";
+import { client } from "./client";
+import { optimism } from "thirdweb/chains";
+
+const USDC_CONTRACT_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
+
+const contract = getContract({
+  client,
+  chain: optimism,
+  address: USDC_CONTRACT_ADDRESS
+  // abi: [
+  //   {
+  //     type: "function",
+  //     name: "balanceOf",
+  //     inputs: [{ type: "address", name: "account" }],
+  //     outputs: [{ type: "uint256", name: "balance" }],
+  //     stateMutability: "view"
+  //   }
+  // ]
+});
+
+// const { mutate: sendTx, data: transactionResult } = useSendTransaction();
+
+// const onClick = () => {
+//   const transaction = prepareContractCall({
+//       contract,
+//       method: "function approve(address to, uint256 value)",
+//       params: ["0x000000000022D473030F116dDEE9F6B43aC78BA3", 1000000n],
+//     }),
+//   sendTx(transaction);
+// };
+
+// console.log(sendTx);
 
 const VaultList = () => {
   const [vaults, setVaults] = useState([]);
@@ -14,6 +48,8 @@ const VaultList = () => {
   const [usernames, setUsernames] = useState<string[]>([]);
   const [selectedUsername, setSelectedUsername] = useState<string>("");
   const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
+
+  const { mutate: sendTx } = useSendTransaction();
 
   useEffect(() => {
     fetchVaultData();
@@ -78,18 +114,24 @@ const VaultList = () => {
 
   const handleDeposit = async (vaultId: string) => {
     try {
-      const signer = await ethers.Signer();
-      console.log(signer);
-      const prefilledData = generatePrefilledData();
+      // const prefilledData = generatePrefilledData();
 
-      const userData = {
-        amount: depositAmount,
-        outputAmount
-      };
-      console.log(userData);
-      const superformData = [prefilledData];
+      // const userData = {
+      //   amount: depositAmount,
+      //   outputAmount
+      // };
+      // console.log(userData);
+      // const superformData = [prefilledData];
+      // const { mutate: sendTx } = useSendTransaction();
 
-      await depositToVault(superformData, signer);
+      const transaction = prepareContractCall({
+        contract,
+        method: "function approve(address to, uint256 value)",
+        params: ["0x000000000022D473030F116dDEE9F6B43aC78BA3", 1000000n]
+      });
+      sendTx(transaction);
+
+      // await depositToVault(superformData, signer);
 
       alert("Deposit successful");
     } catch (error) {
