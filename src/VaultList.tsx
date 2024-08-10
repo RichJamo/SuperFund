@@ -14,6 +14,13 @@ import { approve, transferFrom } from "thirdweb/extensions/erc20";
 const USDC_CONTRACT_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
 const SUPERFORM_ROUTER_ADDRESS = "0xa195608C2306A26f727d5199D5A382a4508308DA";
 const AAVE_USDC_POOL_ADDRESS = "0x794a61358D6845594F94dc1DB02A252b5b4814aD";
+const vaultIds = [
+  "0x03D3CE84279cB6F54f5e6074ff0F8319d830dafe",
+  "0x6926B434CCe9b5b7966aE1BfEef6D0A7DCF3A8bb",
+  "0x81C9A7B55A4df39A9B7B5F781ec0e53539694873",
+  "0x462654Cc90C9124A406080EadaF0bA349eaA4AF9",
+  "0x7708386e23B0d00cE2a05aF4200d80948fEfb9bE"
+];
 
 const VaultList = () => {
   const [vaults, setVaults] = useState([]);
@@ -30,7 +37,7 @@ const VaultList = () => {
   const { mutate: sendTx, data: transactionResult } = useSendTransaction();
 
   useEffect(() => {
-    fetchVaultData();
+    fetchVaultData(vaultIds);
     resolveUsernamesAndAddresses();
   }, []);
 
@@ -46,49 +53,89 @@ const VaultList = () => {
     setUserMap(resolvedUserMap);
   };
 
-  const fetchVaultData = async () => {
+  const fetchVaultData = async vaultIds => {
     setLoading(true);
-    const response = await fetch(
-      "https://api.goldsky.com/api/public/project_cl94kmyjc05xp0ixtdmoahbtu/subgraphs/superform-v1-10/1.1.2/gn",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-          {
-            vaultBasics(first: 5) {
-              id
-              name
-              symbol
-              decimals
-            }
-            vaultDatas(first: 5) {
-              id
-              totalAssets
-              formBalance
-              previewPPS
-              pricePerVaultShare
-            }
-          }
-        `
-        })
-      }
-    );
 
-    const { data } = await response.json();
-    setVaults(
-      data.vaultBasics.map((vault, index) => ({
-        ...vault,
-        totalAssets: formatTotalAssets(
-          data.vaultDatas[index].totalAssets,
-          data.vaultBasics[index].decimals
-        ),
-        previewPPS: data.vaultDatas[index].previewPPS,
-        pricePerVaultShare: data.vaultDatas[index].pricePerVaultShare
-      }))
-    );
-    setLoading(false);
+    // Convert vaultIds array to lowercase and format for GraphQL
+    const vaultIdsLowercase = vaultIds.map(id => id.toLowerCase());
+    const vaultIdsString = vaultIdsLowercase.map(id => `"${id}"`).join(",");
+
+    try {
+      const response = await fetch(
+        "https://api.goldsky.com/api/public/project_cl94kmyjc05xp0ixtdmoahbtu/subgraphs/superform-v1-10/1.1.2/gn",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `
+              {
+                vaultBasics(where: { id_in: [${vaultIdsString}] }) {
+                  id
+                  name
+                  symbol
+                  decimals
+                }
+                vaultDatas(where: { id_in: [${vaultIdsString}] }) {
+                  id
+                  totalAssets
+                  formBalance
+                  previewPPS
+                  pricePerVaultShare
+                }
+              }
+            `
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      // Debugging: Log the result to check its structure
+      console.log("GraphQL Response:", result);
+
+      const { data } = result;
+
+      // Check if data is defined and contains the expected properties
+      if (data && data.vaultBasics && data.vaultDatas) {
+        setVaults(
+          data.vaultBasics.map((vault, index) => {
+            const vaultData = data.vaultDatas.find(v => v.id === vault.id);
+            // Define the hardcoded values
+            const protocolValues = [
+              "PoolTogether",
+              "Exactly Protocol",
+              "Exactly Protocol",
+              "Aloe",
+              "Aloe"
+            ];
+            const apyValues = ["13.73%", "12.00%", "6.94%", "0.04%", "0.06%"];
+            return {
+              ...vault,
+              chain: "Optimism",
+              protocol: protocolValues[index], // Assign the protocol based on index
+              totalAssets: vaultData
+                ? formatTotalAssets(vaultData.totalAssets, vault.decimals)
+                : "N/A",
+              previewPPS: vaultData ? vaultData.previewPPS : "N/A",
+              pricePerVaultShare: vaultData
+                ? vaultData.pricePerVaultShare
+                : "N/A",
+              apy7d: apyValues[index] // Assign the APY 7D based on index
+            };
+          })
+        );
+      } else {
+        console.error("Data structure is not as expected:", data);
+        setVaults([]);
+      }
+    } catch (error) {
+      console.error("Error fetching vault data:", error);
+      setVaults([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
   const handleApprove = async () => {
     try {
       const userData = {
@@ -105,7 +152,6 @@ const VaultList = () => {
         params: [AAVE_USDC_POOL_ADDRESS, BigInt(userData.amount)]
       });
       sendTx(approveTx);
-      alert("Approval successful");
     } catch (error) {
       console.error("Error approving:", error);
       alert("Failed to approve");
@@ -145,12 +191,10 @@ const VaultList = () => {
       //     amount: 100
       //   })
       // ];
-
       // await sendBatchTransaction({
       //   transactions,
       //   account: smartAccount
       // });
-
       // // const prefilledData = generatePrefilledData();
       // const userData = {
       //   amount: depositAmount
@@ -158,7 +202,6 @@ const VaultList = () => {
       // // console.log(userData);
       // // const superformData = prefilledData;
       // // console.log(superformData);
-
       // console.log(contract);
       // const depositTx = prepareContractCall({
       //   contract,
@@ -173,10 +216,7 @@ const VaultList = () => {
       // });
       // console.log(depositTx);
       // sendTx(depositTx);
-
       // await depositToVault(superformData, signer);
-
-      alert("Deposit successful");
     } catch (error) {
       console.error("Error depositing:", error);
       alert("Failed to deposit");
@@ -187,7 +227,6 @@ const VaultList = () => {
     try {
       const signer = await getSigner();
       await withdrawFromVault(vaultId, "1.0", signer);
-      alert("Withdrawal successful");
     } catch (error) {
       console.error("Error withdrawing:", error);
       alert("Failed to withdraw");
@@ -196,7 +235,7 @@ const VaultList = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Selected Client</h2>
+      <h2 className="text-xl font-bold mb-4 text-zinc-100">Selected Client</h2>
       <Dropdown
         usernames={usernames}
         selectedUsername={selectedUsername}
@@ -205,71 +244,90 @@ const VaultList = () => {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Symbol
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Assets
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {vaults.map(vault => (
-              <tr key={vault.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {vault.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {vault.symbol}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {vault.totalAssets}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button
-                    onClick={() => handleApprove()}
-                    className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-                  >
-                    Deposit
-                  </button>
-                  <button
-                    onClick={() => handleWithdraw(vault.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded"
-                  >
-                    Withdraw
-                  </button>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Amount"
-                      value={depositAmount}
-                      onChange={e => setDepositAmount(e.target.value)}
-                      className="border mt-2 p-2 rounded"
-                    />
-                  </div>
-                </td>
+        <div className="overflow-hidden rounded-lg">
+          <table className="min-w-full bg-black text-zinc-100">
+            <thead className="bg-gray-800">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 tracking-wider">
+                  Chain
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 tracking-wider">
+                  Protocol
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 tracking-wider">
+                  Vault
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 tracking-wider">
+                  Total Assets
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 tracking-wider">
+                  APY 7D
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 tracking-wider">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-black divide-y divide-gray-700">
+              {vaults.map(vault => (
+                <tr key={vault.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                    {vault.chain}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                    {vault.protocol}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                    {vault.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                    {vault.totalAssets}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                    {vault.apy7d}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <button
+                      onClick={() => handleApprove()}
+                      className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+                    >
+                      Deposit
+                    </button>
+                    <button
+                      onClick={() => handleWithdraw(vault.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded"
+                    >
+                      Withdraw
+                    </button>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Amount"
+                        value={depositAmount}
+                        onChange={e => setDepositAmount(e.target.value)}
+                        className="bg-gray-800 text-white border border-gray-500 mt-2 p-2 rounded"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 };
 
-// Helper function to format the total assets value
 function formatTotalAssets(totalAssets, decimals) {
-  const formattedValue = Number(totalAssets) / Math.pow(10, decimals);
-  return formattedValue.toFixed(2);
+  const value = Number(totalAssets) / Math.pow(10, decimals);
+  const formattedValue = value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  return formattedValue;
 }
 
 export default VaultList;
