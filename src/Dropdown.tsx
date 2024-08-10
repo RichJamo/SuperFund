@@ -15,7 +15,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     <select
       value={selectedUsername}
       onChange={e => onSelect(e.target.value)}
-      className="p-2 border border-gray-300 rounded"
+      className="bg-gray-800 text-white border border-gray-700 p-2 rounded"
     >
       <option value="" disabled>
         Select a username

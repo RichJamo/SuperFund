@@ -19,7 +19,9 @@ export function App() {
   return (
     <main className="p-4 pb-10 min-h-[100vh] flex container max-w-screen-lg mx-auto relative">
       {account && (
-        <nav className="w-3/8 bg-gray-800 text-white p-6">
+        <nav className="w-3/8 bg-gray-800 text-white p-6 rounded-lg">
+          {" "}
+          {/* Added rounded-lg */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tighter text-zinc-100">
               SuperFund
