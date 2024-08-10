@@ -1,13 +1,10 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
-import { ethers } from "ethers";
 import { client } from "./client";
-import { smartWallet, createWallet } from "thirdweb/wallets";
-import { Sepolia } from "@thirdweb-dev/chains";
-
-// Initialize Thirdweb SDK
-const sdk = new ThirdwebSDK("optimism");
+import { useActiveWallet, useConnect, useDisconnect } from "thirdweb/react";
+import { optimism } from "thirdweb/chains";
+import { createWallet } from "thirdweb/wallets";
+import { useActiveAccount } from "thirdweb/react";
 
 interface NewUserModalProps {
   isOpen: boolean;
@@ -22,44 +19,51 @@ const NewUserModal: React.FC<NewUserModalProps> = ({
 }) => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const activeAccount = useActiveAccount();
+  console.log("address", activeAccount?.address);
 
-  const handleAddClick = async () => {
-    if (username) {
-      setIsLoading(true);
-      try {
-        const wallet = createWallet("io.metamask");
-        console.log(wallet);
-        // connect the wallet, this returns a promise that resolves to the connected account
-        const account = await wallet.connect({
-          // pass the client you created with `createThirdwebClient()`
-          client
-        });
-        console.log(account);
-        // Configure the smart wallet
-        const newSmartWallet = smartWallet({
-          chain: Sepolia,
-          sponsorGas: true
-        });
-        console.log(newSmartWallet);
-        // Connect the smart wallet
-        const smartAccount = await newSmartWallet.connect({
-          client,
-          account
-        });
-
-        // Add the new user with the newly created wallet address
-        onAddUser(username, smartWallet.address);
-
-        // Close the modal
-        onRequestClose();
-      } catch (error) {
-        console.error("Error creating wallet or adding user:", error);
-        alert("Failed to create wallet or add user.");
-      } finally {
-        setIsLoading(false);
+  const { connect } = useConnect({
+    client,
+    // account abstraction options
+    accountAbstraction: {
+      chain: optimism,
+      sponsorGas: true,
+      overrides: {
+        accountSalt: username
       }
-    } else {
-      alert("Please enter a username");
+    }
+  });
+
+  const { disconnect } = useDisconnect();
+
+  console.log("starting");
+  // const smartWallet = createWallet("smart", {
+  //   chain: optimism,
+  //   sponsorGas: true,
+  //   overrides: {
+  //     accountSalt: "123456"
+  //   }
+  // });
+
+  const adminWallet = useActiveWallet();
+
+  const connectToSmartAccount = async () => {
+    try {
+      setIsLoading(true);
+      // Ensure the wallet is initialized before using it
+      if (!adminWallet) {
+        throw new Error("Wallet not initialized");
+      }
+      const smartWallet2 = await adminWallet.connect({
+        client,
+        chain: optimism
+      });
+      console.log(smartWallet2);
+      onAddUser(username, "TBD"); // Pass username and wallet address to parent component
+    } catch (error) {
+      console.error("Error connecting to smart account:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -104,7 +108,7 @@ const NewUserModal: React.FC<NewUserModalProps> = ({
             Cancel
           </button>
           <button
-            onClick={handleAddClick}
+            onClick={connectToSmartAccount}
             className="p-2 bg-green-500 text-white rounded"
             disabled={isLoading}
           >

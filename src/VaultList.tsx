@@ -3,40 +3,17 @@ import { depositToVault, withdrawFromVault } from "./utils/superform";
 import { generatePrefilledData } from "./utils/prefilledData";
 import Dropdown from "./Dropdown";
 import usersData from "./data/users.json";
-import { useSendTransaction } from "thirdweb/react";
+import { useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { getContract, prepareContractCall } from "thirdweb";
 import { client } from "./client";
 import { optimism } from "thirdweb/chains";
+import { smartWallet } from "thirdweb/wallets";
+import { sendBatchTransaction } from "thirdweb";
+import { approve, transferFrom } from "thirdweb/extensions/erc20";
 
 const USDC_CONTRACT_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
-
-const contract = getContract({
-  client,
-  chain: optimism,
-  address: USDC_CONTRACT_ADDRESS
-  // abi: [
-  //   {
-  //     type: "function",
-  //     name: "balanceOf",
-  //     inputs: [{ type: "address", name: "account" }],
-  //     outputs: [{ type: "uint256", name: "balance" }],
-  //     stateMutability: "view"
-  //   }
-  // ]
-});
-
-// const { mutate: sendTx, data: transactionResult } = useSendTransaction();
-
-// const onClick = () => {
-//   const transaction = prepareContractCall({
-//       contract,
-//       method: "function approve(address to, uint256 value)",
-//       params: ["0x000000000022D473030F116dDEE9F6B43aC78BA3", 1000000n],
-//     }),
-//   sendTx(transaction);
-// };
-
-// console.log(sendTx);
+const SUPERFORM_ROUTER_ADDRESS = "0xa195608C2306A26f727d5199D5A382a4508308DA";
+const AAVE_USDC_POOL_ADDRESS = "0x794a61358D6845594F94dc1DB02A252b5b4814aD";
 
 const VaultList = () => {
   const [vaults, setVaults] = useState([]);
@@ -48,8 +25,9 @@ const VaultList = () => {
   const [usernames, setUsernames] = useState<string[]>([]);
   const [selectedUsername, setSelectedUsername] = useState<string>("");
   const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
+  const personalAccount = useActiveAccount();
 
-  const { mutate: sendTx } = useSendTransaction();
+  const { mutate: sendTx, data: transactionResult } = useSendTransaction();
 
   useEffect(() => {
     fetchVaultData();
@@ -111,25 +89,90 @@ const VaultList = () => {
     );
     setLoading(false);
   };
+  const handleApprove = async () => {
+    try {
+      const userData = {
+        amount: depositAmount
+      };
+      const contract = getContract({
+        client,
+        chain: optimism,
+        address: USDC_CONTRACT_ADDRESS
+      });
+      const approveTx = prepareContractCall({
+        contract,
+        method: "function approve(address to, uint256 value)",
+        params: [AAVE_USDC_POOL_ADDRESS, BigInt(userData.amount)]
+      });
+      sendTx(approveTx);
+      alert("Approval successful");
+    } catch (error) {
+      console.error("Error approving:", error);
+      alert("Failed to approve");
+    }
+  };
 
   const handleDeposit = async (vaultId: string) => {
     try {
-      // const prefilledData = generatePrefilledData();
+      // console.log(personalAccount);
+      // const newSmartWallet = new smartWallet(config);
+      // console.log(newSmartWallet);
+      // const smartAccount = await newSmartWallet.connect({
+      //   client,
+      //   personalAccount
+      // });
+      // console.log(smartAccount);
+      // const contract1 = getContract({
+      //   client,
+      //   chain: optimism,
+      //   address: AAVE_USDC_POOL_ADDRESS
+      // });
+      // const contract2 = getContract({
+      //   client,
+      //   chain: optimism,
+      //   address: AAVE_USDC_POOL_ADDRESS
+      // });
+      // const transactions = [
+      //   approve({
+      //     contract1,
+      //     spender: AAVE_USDC_POOL_ADDRESS,
+      //     value: 100
+      //   }),
+      //   transferFrom({
+      //     contract2,
+      //     from: "0x...",
+      //     to: "0x...",
+      //     amount: 100
+      //   })
+      // ];
 
+      // await sendBatchTransaction({
+      //   transactions,
+      //   account: smartAccount
+      // });
+
+      // // const prefilledData = generatePrefilledData();
       // const userData = {
-      //   amount: depositAmount,
-      //   outputAmount
+      //   amount: depositAmount
       // };
-      // console.log(userData);
-      // const superformData = [prefilledData];
-      // const { mutate: sendTx } = useSendTransaction();
+      // // console.log(userData);
+      // // const superformData = prefilledData;
+      // // console.log(superformData);
 
-      const transaction = prepareContractCall({
-        contract,
-        method: "function approve(address to, uint256 value)",
-        params: ["0x000000000022D473030F116dDEE9F6B43aC78BA3", 1000000n]
-      });
-      sendTx(transaction);
+      // console.log(contract);
+      // const depositTx = prepareContractCall({
+      //   contract,
+      //   method:
+      //     "function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode)",
+      //   params: [
+      //     USDC_CONTRACT_ADDRESS,
+      //     BigInt(userData.amount),
+      //     "0xDd704A44866AE9C387CfC687fa642a222b84f0D3",
+      //     0
+      //   ]
+      // });
+      // console.log(depositTx);
+      // sendTx(depositTx);
 
       // await depositToVault(superformData, signer);
 
@@ -193,7 +236,7 @@ const VaultList = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <button
-                    onClick={() => handleDeposit(vault.id)}
+                    onClick={() => handleApprove()}
                     className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
                   >
                     Deposit

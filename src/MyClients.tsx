@@ -3,8 +3,14 @@ import usersData from "./data/users.json";
 import NewUserModal from "./NewUserModal";
 import { getContract } from "thirdweb";
 import { optimism } from "thirdweb/chains";
-import { client } from "./client";
 import { useReadContract } from "thirdweb/react";
+import { createThirdwebClient } from "thirdweb";
+
+const clientId = import.meta.env.VITE_TEMPLATE_CLIENT_ID as string;
+
+const client = createThirdwebClient({
+  clientId: clientId
+});
 
 const USDC_CONTRACT_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
 
@@ -23,18 +29,7 @@ const contract = getContract({
   ]
 });
 
-function useBalanceOfContract(walletAddress: string | undefined) {
-  const { data, isLoading } = useReadContract({
-    contract,
-    method: "balanceOf",
-    params: [walletAddress || ""], // Wrap in an array
-    queryOptions: { enabled: !!walletAddress } // Enable query if account is defined
-  });
-
-  return { data, isLoading };
-}
-
-export default function MyClients() {
+function MyClients() {
   const [usernames, setUsernames] = useState<string[]>(
     usersData.map(user => user.username)
   );
@@ -46,10 +41,23 @@ export default function MyClients() {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleAddUser = (username: string, walletAddress: string) => {
-    setUsernames(prev => [...prev, username]);
-    setUserMap(prev => ({ ...prev, [username]: walletAddress }));
-    setIsModalOpen(false);
+  const handleAddUser = async (username: string, walletAddress: string) => {
+    try {
+      setUsernames(prev => [...prev, username]);
+      setUserMap(prev => ({ ...prev, [username]: walletAddress }));
+      setIsModalOpen(false); // Close the modal after the user is added
+    } catch (error) {
+      console.error("Error adding user:", error);
+    }
+  };
+
+  const fetchBalances = (walletAddress: string | undefined) => {
+    return useReadContract({
+      contract,
+      method: "balanceOf",
+      params: [walletAddress || ""],
+      queryOptions: { enabled: !!walletAddress }
+    });
   };
 
   return (
@@ -66,8 +74,8 @@ export default function MyClients() {
         <tbody>
           {usernames.map(username => {
             const walletAddress = userMap[username];
-            const { data, isLoading } = useBalanceOfContract(walletAddress);
-
+            const data = 1000;
+            const isLoading = false;
             return (
               <tr key={username}>
                 <td className="py-2 px-4 border-b">{username}</td>
@@ -94,3 +102,5 @@ export default function MyClients() {
     </>
   );
 }
+
+export default MyClients;
