@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import usersData from "./data/users.json";
 import NewUserModal from "./NewUserModal";
 import { getContract } from "thirdweb";
@@ -30,16 +30,43 @@ const contract = getContract({
   ]
 });
 
+async function fetchUsersData() {
+  try {
+    const response = await fetch("http://localhost:4000/api/users");
+    if (!response.ok) {
+      throw new Error("Failed to fetch users");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return [];
+  }
+}
+
 function MyClients() {
-  const [usernames, setUsernames] = useState<string[]>(
-    usersData.map(user => user.username)
-  );
-  const [userMap, setUserMap] = useState<{ [key: string]: string }>(
-    usersData.reduce((map: { [key: string]: string }, user) => {
-      map[user.username] = user.walletAddress;
-      return map;
-    }, {})
-  );
+  const [usernames, setUsernames] = useState<string[]>([]);
+  const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    async function getUsers() {
+      const data = await fetchUsersData();
+      setUsernames(data.map((user: { username: string }) => user.username));
+      setUserMap(
+        data.reduce(
+          (
+            map: { [key: string]: string },
+            user: { username: string; walletAddress: string }
+          ) => {
+            map[user.username] = user.walletAddress;
+            return map;
+          },
+          {}
+        )
+      );
+    }
+
+    getUsers();
+  }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleAddUser = async (username: string, walletAddress: string) => {
