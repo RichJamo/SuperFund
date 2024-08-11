@@ -5,6 +5,7 @@ import { getContract } from "thirdweb";
 import { optimism } from "thirdweb/chains";
 import { useReadContract } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
+import { sha256 } from "thirdweb/utils";
 
 const clientId = import.meta.env.VITE_TEMPLATE_CLIENT_ID as string;
 

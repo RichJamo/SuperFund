@@ -7,6 +7,7 @@ import { useActiveAccount } from "thirdweb/react";
 import { getContract, prepareContractCall } from "thirdweb";
 import { useContractEvents } from "thirdweb/react";
 import { prepareEvent } from "thirdweb";
+import { stringToBytes32 } from "./utils/stringToBytes32";
 
 const DEFAULT_ACCOUNT_FACTORY = "0x85e23b94e7F5E9cC1fF78BCe78cfb15B81f0DF00";
 
@@ -69,10 +70,11 @@ const NewUserModal: React.FC<NewUserModalProps> = ({
         throw new Error("Wallet not initialized");
       }
       console.log("activeAccount", activeAccount?.address);
+      console.log(stringToBytes32(username));
       const createAccountTx = prepareContractCall({
         contract,
         method: "function createAccount(address _admin, bytes calldata _data)",
-        params: [activeAccount?.address, `0x${username}`]
+        params: [activeAccount?.address, stringToBytes32(username)]
       });
       console.log("createAccountTx", createAccountTx);
       sendTx(createAccountTx);
