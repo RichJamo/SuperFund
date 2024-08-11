@@ -1,10 +1,5 @@
-[
-  {
-    "username": "Alice",
-    "walletAddress": "0xDd704A44866AE9C387CfC687fa642a222b84f0D3"
-  },
-  {
-    "username": "Bob",
-    "walletAddress": "0xabcdef1234567890abcdef1234567890abcdef12"
-  }
-]
+{
+  "Alice": "0xDd704A44866AE9C387CfC687fa642a222b84f0D3",
+  "Bob": "0xabcdef1234567890abcdef1234567890abcdef12",
+  "RichJamo@78": "0xe9d7736e4e4b9db6d9dd6f25dbe34e1a0c3e1100"
+}

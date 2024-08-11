@@ -21,8 +21,9 @@ app.get('/api/users', (req, res) => {
 });
 
 // Add a new user
-app.post('/users', (req, res) => {
+app.post('/api/users', (req, res) => {
   const { username, address } = req.body;
+  console.log('Received data:', req.body); // Log the request body
 
   if (!username || !address) {
     return res.status(400).send('Username and address are required.');

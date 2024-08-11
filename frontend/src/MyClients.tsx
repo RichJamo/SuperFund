@@ -50,18 +50,19 @@ function MyClients() {
   useEffect(() => {
     async function getUsers() {
       const data = await fetchUsersData();
-      setUsernames(data.map((user: { username: string }) => user.username));
+
+      // Convert object to array if needed
+      const usersArray = Object.entries(data).map(([username, address]) => ({
+        username,
+        address
+      }));
+
+      setUsernames(usersArray.map(user => user.username));
       setUserMap(
-        data.reduce(
-          (
-            map: { [key: string]: string },
-            user: { username: string; walletAddress: string }
-          ) => {
-            map[user.username] = user.walletAddress;
-            return map;
-          },
-          {}
-        )
+        usersArray.reduce((map, user) => {
+          map[user.username] = user.address;
+          return map;
+        }, {})
       );
     }
 
@@ -71,11 +72,26 @@ function MyClients() {
 
   const handleAddUser = async (username: string, walletAddress: string) => {
     try {
+      // Send a POST request to the backend to add the new user
+      const response = await fetch("http://localhost:4000/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, address: walletAddress }) // Adjust to match the backend structure
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add user");
+      }
+
+      // If the user is successfully added, update the state on the frontend
       setUsernames(prev => [...prev, username]);
       setUserMap(prev => ({ ...prev, [username]: walletAddress }));
       setIsModalOpen(false); // Close the modal after the user is added
     } catch (error) {
       console.error("Error adding user:", error);
+      alert("Failed to add user");
     }
   };
 

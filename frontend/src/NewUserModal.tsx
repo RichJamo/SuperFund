@@ -86,12 +86,14 @@ const NewUserModal: React.FC<NewUserModalProps> = ({
   };
 
   const prevTransactionRef = useRef<any | null>(null);
-  console.log(prevTransactionRef.current);
+  console.log("prev Tx", prevTransactionRef.current);
+
   useEffect(() => {
     if (transactionResult && transactionResult !== prevTransactionRef.current) {
-      console.log(transactionResult);
+      console.log("tx conditional passed", transactionResult);
       prevTransactionRef.current = transactionResult;
       if (eventLog && eventLog.length > 0) {
+        console.log("event conditional passed");
         console.log("Received events:", eventLog);
         const latestEvent = eventLog[eventLog.length - 1];
         console.log("latestEvent", latestEvent);
