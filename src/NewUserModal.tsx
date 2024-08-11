@@ -1,11 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Modal from "react-modal";
 import { client } from "./client";
-import { useActiveWallet, useConnect, useDisconnect } from "thirdweb/react";
+import { useSendTransaction } from "thirdweb/react";
 import { optimism } from "thirdweb/chains";
-import { createWallet } from "thirdweb/wallets";
 import { useActiveAccount } from "thirdweb/react";
+import { getContract, prepareContractCall } from "thirdweb";
+import { useContractEvents } from "thirdweb/react";
+import { prepareEvent } from "thirdweb";
 
+const DEFAULT_ACCOUNT_FACTORY = "0x85e23b94e7F5E9cC1fF78BCe78cfb15B81f0DF00";
+
+function formatAddress(rawAddress: string): string {
+  // Ensure the address starts with '0x'
+  if (!rawAddress.startsWith("0x")) {
+    rawAddress = "0x" + rawAddress;
+  }
+
+  // Remove leading zeros from the address
+  const formattedAddress = "0x" + rawAddress.slice(-40);
+
+  return formattedAddress;
+}
+
+const myEvent = prepareEvent({
+  signature:
+    "event AccountCreated(address indexed account, address indexed accountAdmin)"
+});
+
+const contract = getContract({
+  client,
+  chain: optimism,
+  address: DEFAULT_ACCOUNT_FACTORY
+});
 interface NewUserModalProps {
   isOpen: boolean;
   onRequestClose: () => void;
@@ -19,53 +45,61 @@ const NewUserModal: React.FC<NewUserModalProps> = ({
 }) => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { mutate: sendTx, data: transactionResult } = useSendTransaction();
+
   const activeAccount = useActiveAccount();
+  if (!activeAccount) {
+    throw new Error("Wallet not initialized");
+  }
   console.log("address", activeAccount?.address);
 
-  const { connect } = useConnect({
-    client,
-    // account abstraction options
-    accountAbstraction: {
-      chain: optimism,
-      sponsorGas: true,
-      overrides: {
-        accountSalt: username
-      }
-    }
+  const {
+    data: eventLog,
+    isLoading: isEventLoading,
+    error
+  } = useContractEvents({
+    contract,
+    events: [myEvent] // ({ accountAdmin: activeAccount?.address })
   });
+  console.log("contractEvents", eventLog);
 
-  const { disconnect } = useDisconnect();
-
-  console.log("starting");
-  // const smartWallet = createWallet("smart", {
-  //   chain: optimism,
-  //   sponsorGas: true,
-  //   overrides: {
-  //     accountSalt: "123456"
-  //   }
-  // });
-
-  const adminWallet = useActiveWallet();
-
-  const connectToSmartAccount = async () => {
+  const handleCreateAccount = async () => {
     try {
-      setIsLoading(true);
-      // Ensure the wallet is initialized before using it
-      if (!adminWallet) {
+      if (!activeAccount) {
         throw new Error("Wallet not initialized");
       }
-      const smartWallet2 = await adminWallet.connect({
-        client,
-        chain: optimism
+      console.log("activeAccount", activeAccount?.address);
+      const createAccountTx = prepareContractCall({
+        contract,
+        method: "function createAccount(address _admin, bytes calldata _data)",
+        params: [activeAccount?.address, `0x${username}`]
       });
-      console.log(smartWallet2);
-      onAddUser(username, "TBD"); // Pass username and wallet address to parent component
+      console.log("createAccountTx", createAccountTx);
+      sendTx(createAccountTx);
+      console.log("sent tx");
     } catch (error) {
-      console.error("Error connecting to smart account:", error);
-    } finally {
-      setIsLoading(false);
+      console.error("Error creating new account:", error);
+      alert("Failed to create new account");
     }
   };
+
+  const prevTransactionRef = useRef<any | null>(null);
+  console.log(prevTransactionRef.current);
+  useEffect(() => {
+    if (transactionResult && transactionResult !== prevTransactionRef.current) {
+      console.log(transactionResult);
+      prevTransactionRef.current = transactionResult;
+      if (eventLog && eventLog.length > 0) {
+        console.log("Received events:", eventLog);
+        const latestEvent = eventLog[eventLog.length - 1];
+        console.log("latestEvent", latestEvent);
+        if (latestEvent && latestEvent.topics[1]) {
+          onAddUser(username, formatAddress(latestEvent.topics[1]));
+          onRequestClose();
+        }
+      }
+    }
+  }, [eventLog, transactionResult]);
 
   return (
     <Modal
@@ -108,7 +142,7 @@ const NewUserModal: React.FC<NewUserModalProps> = ({
             Cancel
           </button>
           <button
-            onClick={connectToSmartAccount}
+            onClick={handleCreateAccount}
             className="p-2 bg-green-500 text-white rounded"
             disabled={isLoading}
           >
@@ -121,3 +155,53 @@ const NewUserModal: React.FC<NewUserModalProps> = ({
 };
 
 export default NewUserModal;
+
+// useEffect(() => {
+//   if (transactionResult && data) {
+//     console.log("transactionResult", transactionResult);
+//     alert("Transaction succeeded");
+//     // if (!activeAccount) {
+//     //   throw new Error("Wallet not initialized");
+//     // }
+//     // const contract = getContract({
+//     //   client,
+//     //   address: DEFAULT_ACCOUNT_FACTORY,
+//     //   chain: optimism
+//     // });
+
+//     // const { data, isLoading: isContractLoading } = useReadContract({
+//     //   contract,
+//     //   method:
+//     //     "function getAddress(address _adminSigner, bytes32 data) public view returns (address)",
+//     //   params: [activeAccount?.address, `0x${username}`]
+//     // });
+//     // console.log("data", data);
+//     // if (!data) {
+//     //   throw new Error("Wallet address not returned");
+//     // }
+//     if (!data) {
+//       throw new Error("Wallet address not returned");
+//     }
+//     onAddUser(username, data); // Pass username and wallet address to parent component
+//   }
+// }, [transactionResult, data]);
+
+// const connectToSmartAccount = async () => {
+//   try {
+//     setIsLoading(true);
+//     // Ensure the wallet is initialized before using it
+//     if (!adminWallet) {
+//       throw new Error("Wallet not initialized");
+//     }
+//     const smartWallet2 = await adminWallet.connect({
+//       client,
+//       chain: optimism
+//     });
+//     console.log(smartWallet2);
+//     onAddUser(username, "TBD"); // Pass username and wallet address to parent component
+//   } catch (error) {
+//     console.error("Error connecting to smart account:", error);
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };
