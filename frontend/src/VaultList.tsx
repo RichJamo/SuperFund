@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { depositToVault, withdrawFromVault } from "./utils/superform";
-import { generatePrefilledData } from "./utils/prefilledData";
 import Dropdown from "./Dropdown";
-import usersData from "./data/users.json";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { getContract, prepareContractCall } from "thirdweb";
 import { client } from "./client";
 import { optimism } from "thirdweb/chains";
-import { smartWallet } from "thirdweb/wallets";
-import { sendBatchTransaction } from "thirdweb";
-import { approve, transferFrom } from "thirdweb/extensions/erc20";
 
 const USDC_CONTRACT_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
 const SUPERFORM_ROUTER_ADDRESS = "0xa195608C2306A26f727d5199D5A382a4508308DA";
