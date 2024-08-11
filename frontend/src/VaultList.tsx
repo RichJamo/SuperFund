@@ -36,22 +36,30 @@ const VaultList = () => {
 
   const { mutate: sendTx, data: transactionResult } = useSendTransaction();
 
+  // Fetch user data from the backend and update state
+  const fetchUsersData = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/users");
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+      const data = await response.json();
+
+      // Convert the data (object) to the desired format
+      const resolvedUsernames = Object.keys(data);
+      const resolvedUserMap = data;
+
+      setUsernames(resolvedUsernames);
+      setUserMap(resolvedUserMap);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
   useEffect(() => {
     fetchVaultData(vaultIds);
-    resolveUsernamesAndAddresses();
+    fetchUsersData(); // Call to fetch user data
   }, []);
-
-  // Resolve both usernames and wallet addresses
-  const resolveUsernamesAndAddresses = () => {
-    const resolvedUsernames = usersData.map(user => user.username);
-    const resolvedUserMap = usersData.reduce((map, user) => {
-      map[user.username] = user.walletAddress;
-      return map;
-    }, {} as { [key: string]: string });
-
-    setUsernames(resolvedUsernames);
-    setUserMap(resolvedUserMap);
-  };
 
   const fetchVaultData = async vaultIds => {
     setLoading(true);
