@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
-import thirdwebIcon from "./thirdweb.svg";
-import { client } from "./client";
-import VaultList from "./VaultList";
-import MyClients from "./MyClients";
+import thirdwebIcon from "./styles/thirdweb.svg";
+import { client } from "./utils/client";
+import VaultsContainer from "./containers/VaultsContainer";
+import MyClientsContainer from "./containers/MyClientsContainer";
 import Modal from "react-modal";
 
 // Set the root element where your app is rendered
@@ -63,8 +63,8 @@ export function App() {
           )}
           {account ? (
             <>
-              {activeSection === "clients" && <MyClients />}
-              {activeSection === "vaults" && <VaultList />}
+              {activeSection === "clients" && <MyClientsContainer />}
+              {activeSection === "vaults" && <VaultsContainer />}
             </>
           ) : (
             <ConnectButton
