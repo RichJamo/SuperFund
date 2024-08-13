@@ -1,5 +1,5 @@
 import React from "react";
-import NewUserModal from "./NewUserModal";
+import NewUserModal from "./NewUserModalView";
 
 interface MyClientsViewProps {
   usernames: string[];

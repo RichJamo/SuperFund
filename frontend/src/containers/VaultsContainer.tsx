@@ -4,14 +4,7 @@ import { formatTotalAssets } from "../utils/utils";
 import { handleApprove, handleWithdraw } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
 import { Vault } from "../types/types";
-
-const vaultIds = [
-  "0x03D3CE84279cB6F54f5e6074ff0F8319d830dafe",
-  "0x6926B434CCe9b5b7966aE1BfEef6D0A7DCF3A8bb",
-  "0x81C9A7B55A4df39A9B7B5F781ec0e53539694873",
-  "0x462654Cc90C9124A406080EadaF0bA349eaA4AF9",
-  "0x7708386e23B0d00cE2a05aF4200d80948fEfb9bE"
-];
+import { VAULT_IDS } from "../constants/index";
 
 const VaultsContainer = () => {
   const [vaults, setVaults] = useState<Vault[]>([]);
@@ -23,7 +16,7 @@ const VaultsContainer = () => {
 
   useEffect(() => {
     async function init() {
-      await fetchVaultData(vaultIds).then(data => {
+      await fetchVaultData(VAULT_IDS).then(data => {
         if (data?.vaultBasics && data?.vaultDatas) {
           const formattedVaults = data.vaultBasics.map((vault, index) => {
             const vaultData = data.vaultDatas.find(v => v.id === vault.id);

@@ -1,7 +1,9 @@
-import { useReadContract } from "thirdweb/react";
-import { getContract } from "thirdweb";
+import { useReadContract, useSendTransaction } from "thirdweb/react";
+import { getContract, prepareEvent, prepareContractCall } from "thirdweb";
 import { optimism } from "thirdweb/chains";
 import { createThirdwebClient } from "thirdweb";
+import { DEFAULT_ACCOUNT_FACTORY } from "../constants";
+import { stringToBytes32 } from "../utils/stringToBytes32";
 
 const clientId = import.meta.env.VITE_TEMPLATE_CLIENT_ID as string;
 
@@ -37,3 +39,37 @@ export function useContractBalance(userMap: { [key: string]: string }) {
   });
   return { data, isLoading };
 }
+
+export const useContractSetup = () => {
+  const contract = getContract({
+    client,
+    chain: optimism,
+    address: DEFAULT_ACCOUNT_FACTORY
+  });
+
+  const myEvent = prepareEvent({
+    signature:
+      "event AccountCreated(address indexed account, address indexed accountAdmin)"
+  });
+
+  return { contract, myEvent };
+};
+
+
+export const useCreateAccount = (contract: any, activeAccount: any) => {
+  const { mutate: sendTx, data: transactionResult } = useSendTransaction();
+
+  const createAccount = (username: string) => {
+    if (!activeAccount) throw new Error("Wallet not initialized");
+
+    const createAccountTx = prepareContractCall({
+      contract,
+      method: "function createAccount(address _admin, bytes calldata _data)",
+      params: [activeAccount.address, stringToBytes32(username)]
+    });
+
+    sendTx(createAccountTx);
+  };
+
+  return { createAccount, transactionResult };
+};
