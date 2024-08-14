@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { fetchUsersData, fetchVaultData } from "../utils/api";
 import { formatTotalAssets } from "../utils/utils";
-import { handleApprove, handleWithdraw } from "../actions/actions";
+import { handleApproveAndDeposit, handleWithdraw } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
 import { Vault } from "../types/types";
 import { VAULT_IDS } from "../constants/index";
+import { Address, getContract, prepareContractCall } from "thirdweb";
+import { client } from "../utils/client";
+import { optimism } from "thirdweb/chains";
+import { useActiveAccount, useActiveWallet } from "thirdweb/react";
+import { USDC_CONTRACT_ADDRESS } from "../constants";
+import { AAVE_USDC_POOL_ADDRESS } from "../constants";
+import { sendBatchTransaction } from "thirdweb";
+import { smartWallet } from "thirdweb/wallets";
 
 const VaultsContainer = () => {
   const [vaults, setVaults] = useState<Vault[]>([]);
@@ -13,6 +21,34 @@ const VaultsContainer = () => {
   const [usernames, setUsernames] = useState<string[]>([]);
   const [selectedUsername, setSelectedUsername] = useState<string>("");
   const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
+
+  const handleSuccess = (transactionResult: any) => {
+    console.log("Transaction successful:", transactionResult);
+    // Handle success logic here
+  };
+
+  const handleError = (error: Error) => {
+    console.error("Transaction error:", error);
+    // Handle error logic here
+  };
+
+  const account = useActiveAccount();
+
+  const handleTransaction = async () => {
+    try {
+      console.log("Depositing to vault...");
+      setDepositAmount;
+      console.log(depositAmount);
+      const result = await handleApproveAndDeposit(
+        account,
+        depositAmount,
+        userMap[selectedUsername] as Address
+      );
+      console.log(result);
+    } catch (error) {
+      throw new Error("Transaction failed");
+    }
+  };
 
   useEffect(() => {
     async function init() {
@@ -58,6 +94,16 @@ const VaultsContainer = () => {
     init();
   }, []);
 
+  const handleUserChange = (username: string) => {
+    setSelectedUsername(username);
+    // Logic to display account balances based on the selected user
+    // For example, fetch user account details and update active account
+    // const userWalletAddress = getUserWalletAddress(username); // Replace with actual method to get address
+    // if (userWalletAddress) {
+    //   setActiveAccount(userWalletAddress);
+    // }
+  };
+
   return (
     <VaultsView
       loading={loading}
@@ -67,8 +113,10 @@ const VaultsContainer = () => {
       depositAmount={depositAmount}
       setDepositAmount={setDepositAmount}
       setSelectedUsername={setSelectedUsername}
-      handleApprove={() => handleApprove(depositAmount)}
       handleWithdraw={handleWithdraw}
+      transaction={handleTransaction}
+      onTransactionConfirmed={handleSuccess}
+      onError={handleError}
     />
   );
 };

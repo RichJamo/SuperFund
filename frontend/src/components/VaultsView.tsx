@@ -1,6 +1,6 @@
 import React from "react";
 import Dropdown from "./Dropdown";
-
+import { TransactionButton } from "thirdweb/react";
 interface Vault {
   id: string;
   chain: string;
@@ -18,8 +18,10 @@ interface VaultsViewProps {
   depositAmount: string;
   setDepositAmount: (value: string) => void;
   setSelectedUsername: (value: string) => void;
-  handleApprove: () => void;
   handleWithdraw: (vaultId: string) => void;
+  transaction: () => Promise<any>;
+  onTransactionConfirmed: (result: any) => void;
+  onError: (error: Error) => void;
 }
 
 const VaultsView: React.FC<VaultsViewProps> = ({
@@ -30,8 +32,10 @@ const VaultsView: React.FC<VaultsViewProps> = ({
   depositAmount,
   setDepositAmount,
   setSelectedUsername,
-  handleApprove,
-  handleWithdraw
+  handleWithdraw,
+  transaction,
+  onTransactionConfirmed,
+  onError
 }) => {
   return (
     <div>
@@ -81,12 +85,13 @@ const VaultsView: React.FC<VaultsViewProps> = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">{vault.apy7d}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleWithdraw(vault.id)}
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600"
+                    <TransactionButton
+                      transaction={transaction}
+                      onTransactionConfirmed={onTransactionConfirmed}
+                      onError={onError}
                     >
-                      Withdraw
-                    </button>
+                      Deposit
+                    </TransactionButton>
                   </td>
                 </tr>
               ))}
@@ -102,12 +107,6 @@ const VaultsView: React.FC<VaultsViewProps> = ({
           onChange={e => setDepositAmount(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded mb-2"
         />
-        <button
-          onClick={handleApprove}
-          className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded hover:bg-green-600"
-        >
-          Approve
-        </button>
       </div>
     </div>
   );
