@@ -23,6 +23,7 @@ interface VaultsViewProps {
   withdrawTransaction: () => Promise<any>;
   onTransactionConfirmed: (result: any) => void;
   onError: (error: Error) => void;
+  usdcBalance: string;
 }
 
 const VaultsView: React.FC<VaultsViewProps> = ({
@@ -36,16 +37,22 @@ const VaultsView: React.FC<VaultsViewProps> = ({
   depositTransaction,
   withdrawTransaction,
   onTransactionConfirmed,
-  onError
+  onError,
+  usdcBalance
 }) => {
   return (
     <div>
       <h2 className="text-xl font-bold mb-4 text-zinc-100">Selected Client</h2>
-      <Dropdown
-        usernames={usernames}
-        selectedUsername={selectedUsername}
-        onSelect={setSelectedUsername}
-      />
+      <div className="flex items-center mb-4">
+        <Dropdown
+          usernames={usernames}
+          selectedUsername={selectedUsername}
+          onSelect={setSelectedUsername}
+        />
+        <span className="ml-4 text-zinc-100">
+          Free USDC Balance: ${usdcBalance}
+        </span>
+      </div>
       {loading ? (
         <p>Loading...</p>
       ) : (

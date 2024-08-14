@@ -1,18 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { fetchUsersData, fetchVaultData } from "../utils/api";
 import { formatTotalAssets } from "../utils/utils";
-import { handleApproveAndDeposit, handleWithdrawal } from "../actions/actions";
+import {
+  handleApproveAndDeposit,
+  handleWithdrawal,
+  fetchUSDCBalance
+} from "../actions/actions";
 import VaultsView from "../components/VaultsView";
 import { Vault } from "../types/types";
 import { VAULT_IDS } from "../constants/index";
 import { Address, getContract, prepareContractCall } from "thirdweb";
 import { client } from "../utils/client";
 import { optimism } from "thirdweb/chains";
-import { useActiveAccount, useActiveWallet } from "thirdweb/react";
+import {
+  useActiveAccount,
+  useActiveWallet,
+  useReadContract
+} from "thirdweb/react";
 import { USDC_CONTRACT_ADDRESS } from "../constants";
 import { AAVE_USDC_POOL_ADDRESS } from "../constants";
 import { sendBatchTransaction } from "thirdweb";
 import { smartWallet } from "thirdweb/wallets";
+import { getBalance } from "thirdweb/extensions/erc20";
+
+const contract = getContract({
+  client,
+  chain: optimism,
+  address: USDC_CONTRACT_ADDRESS
+});
 
 const VaultsContainer = () => {
   const [vaults, setVaults] = useState<Vault[]>([]);
@@ -34,6 +49,20 @@ const VaultsContainer = () => {
 
   const account = useActiveAccount();
 
+  const { data: usdcBalanceResult, isLoading, error } = useReadContract(
+    getBalance,
+    {
+      contract,
+      address: userMap[selectedUsername] || ""
+    }
+  );
+
+  const usdcBalance = isLoading
+    ? "Loading..."
+    : error
+    ? "Error"
+    : usdcBalanceResult?.displayValue || "N/A";
+
   const handleDepositTransaction = async () => {
     try {
       console.log("Depositing to vault...");
@@ -45,6 +74,7 @@ const VaultsContainer = () => {
         userMap[selectedUsername] as Address
       );
       console.log(result);
+      return result;
     } catch (error) {
       throw new Error("Transaction failed");
     }
@@ -60,6 +90,7 @@ const VaultsContainer = () => {
         userMap[selectedUsername] as Address
       );
       console.log(result);
+      return result;
     } catch (error) {
       throw new Error("Transaction failed");
     }
@@ -132,6 +163,7 @@ const VaultsContainer = () => {
       withdrawTransaction={handleWithdrawTransaction}
       onTransactionConfirmed={handleSuccess}
       onError={handleError}
+      usdcBalance={usdcBalance} // Pass USDC balance
     />
   );
 };

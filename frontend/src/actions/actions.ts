@@ -6,6 +6,7 @@ import { USDC_CONTRACT_ADDRESS } from "../constants";
 import { AAVE_USDC_POOL_ADDRESS } from "../constants";
 import { smartWallet } from "thirdweb/wallets";
 import { sendBatchTransaction, sendTransaction } from "thirdweb";
+import { getBalance } from "thirdweb/extensions/erc20";
 
 export const handleApproveAndDeposit = async (account, depositAmount: string, clientAddress: Address) => { //vaultId: string - TODO add this as an input
   console.log("got here")
@@ -99,3 +100,4 @@ export const handleWithdrawal = async (account, withdrawAmount: string, clientAd
   console.log("Transaction successful:", waitForReceiptOptions);
   return waitForReceiptOptions;
 };
+
