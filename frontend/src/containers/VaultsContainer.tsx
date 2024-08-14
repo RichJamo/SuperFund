@@ -1,22 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { fetchUsersData, fetchVaultData } from "../utils/api";
 import { formatTotalAssets } from "../utils/utils";
-import {
-  handleApproveAndDeposit,
-  handleWithdrawal,
-  fetchUSDCBalance
-} from "../actions/actions";
+import { handleApproveAndDeposit, handleWithdrawal } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
 import { Vault } from "../types/types";
 import { VAULT_IDS } from "../constants/index";
 import { Address, getContract, prepareContractCall } from "thirdweb";
 import { client } from "../utils/client";
 import { optimism } from "thirdweb/chains";
-import {
-  useActiveAccount,
-  useActiveWallet,
-  useReadContract
-} from "thirdweb/react";
+import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { USDC_CONTRACT_ADDRESS } from "../constants";
 import { AAVE_USDC_POOL_ADDRESS } from "../constants";
 import { sendBatchTransaction } from "thirdweb";
