@@ -5,9 +5,9 @@ import { optimism } from "thirdweb/chains";
 import { USDC_CONTRACT_ADDRESS } from "../constants";
 import { AAVE_USDC_POOL_ADDRESS } from "../constants";
 import { smartWallet } from "thirdweb/wallets";
-import { sendBatchTransaction } from "thirdweb";
+import { sendBatchTransaction, sendTransaction } from "thirdweb";
 
-export const handleApproveAndDeposit = async (account, depositAmount: string, clientAddress: Address) => {
+export const handleApproveAndDeposit = async (account, depositAmount: string, clientAddress: Address) => { //vaultId: string - TODO add this as an input
   console.log("got here")
   let contract = getContract({
     client,
@@ -59,12 +59,43 @@ export const handleApproveAndDeposit = async (account, depositAmount: string, cl
   return waitForReceiptOptions;
 };
 
-export const handleWithdraw = async (vaultId: string) => {
-  try {
-    const signer = await getSigner();
-    await withdrawFromVault(vaultId, "1.0", signer);
-  } catch (error) {
-    console.error("Error withdrawing:", error);
-    throw error;
+export const handleWithdrawal = async (account, withdrawAmount: string, clientAddress: Address) => { //vaultId: string
+  const contract = getContract({
+    client,
+    chain: optimism,
+    address: AAVE_USDC_POOL_ADDRESS
+  });
+  const withdrawTx = prepareContractCall({
+    contract,
+    method:
+      "function withdraw(address asset, uint256 amount, address to)",
+    params: [USDC_CONTRACT_ADDRESS, BigInt(withdrawAmount), clientAddress] // what amount should I set here? Get balance first?
+  });
+  const wallet = smartWallet({
+    chain: optimism,
+    sponsorGas: true, // enable sponsored transactions
+    overrides: {
+      accountAddress: clientAddress // override account address
+    }
+  });
+  if (!account) {
+    throw new Error("No active account found");
   }
+  await wallet.connect({
+    client: client,
+    personalAccount: account
+  });
+  let smartAccount = wallet.getAccount();
+  if (!smartAccount) {
+    throw new Error("No smart account found");
+  }
+  console.log(smartAccount);
+  console.log("Approving and depositing...");
+  const waitForReceiptOptions = await sendTransaction({
+    account: smartAccount,
+    transaction: withdrawTx
+  });
+
+  console.log("Transaction successful:", waitForReceiptOptions);
+  return waitForReceiptOptions;
 };

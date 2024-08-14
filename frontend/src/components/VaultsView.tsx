@@ -1,6 +1,7 @@
 import React from "react";
 import Dropdown from "./Dropdown";
 import { TransactionButton } from "thirdweb/react";
+
 interface Vault {
   id: string;
   chain: string;
@@ -18,8 +19,8 @@ interface VaultsViewProps {
   depositAmount: string;
   setDepositAmount: (value: string) => void;
   setSelectedUsername: (value: string) => void;
-  handleWithdraw: (vaultId: string) => void;
-  transaction: () => Promise<any>;
+  depositTransaction: () => Promise<any>;
+  withdrawTransaction: () => Promise<any>;
   onTransactionConfirmed: (result: any) => void;
   onError: (error: Error) => void;
 }
@@ -32,8 +33,8 @@ const VaultsView: React.FC<VaultsViewProps> = ({
   depositAmount,
   setDepositAmount,
   setSelectedUsername,
-  handleWithdraw,
-  transaction,
+  depositTransaction,
+  withdrawTransaction,
   onTransactionConfirmed,
   onError
 }) => {
@@ -86,11 +87,20 @@ const VaultsView: React.FC<VaultsViewProps> = ({
                   <td className="px-6 py-4 whitespace-nowrap">{vault.apy7d}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <TransactionButton
-                      transaction={transaction}
+                      transaction={depositTransaction}
                       onTransactionConfirmed={onTransactionConfirmed}
                       onError={onError}
                     >
                       Deposit
+                    </TransactionButton>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <TransactionButton
+                      transaction={withdrawTransaction}
+                      onTransactionConfirmed={onTransactionConfirmed}
+                      onError={onError}
+                    >
+                      Withdraw
                     </TransactionButton>
                   </td>
                 </tr>

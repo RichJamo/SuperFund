@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchUsersData, fetchVaultData } from "../utils/api";
 import { formatTotalAssets } from "../utils/utils";
-import { handleApproveAndDeposit, handleWithdraw } from "../actions/actions";
+import { handleApproveAndDeposit, handleWithdrawal } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
 import { Vault } from "../types/types";
 import { VAULT_IDS } from "../constants/index";
@@ -34,7 +34,7 @@ const VaultsContainer = () => {
 
   const account = useActiveAccount();
 
-  const handleTransaction = async () => {
+  const handleDepositTransaction = async () => {
     try {
       console.log("Depositing to vault...");
       setDepositAmount;
@@ -42,6 +42,21 @@ const VaultsContainer = () => {
       const result = await handleApproveAndDeposit(
         account,
         depositAmount,
+        userMap[selectedUsername] as Address
+      );
+      console.log(result);
+    } catch (error) {
+      throw new Error("Transaction failed");
+    }
+  };
+
+  const handleWithdrawTransaction = async () => {
+    try {
+      console.log("Withdrawing from vault...");
+      let withdrawAmount = "10000";
+      const result = await handleWithdrawal(
+        account,
+        withdrawAmount,
         userMap[selectedUsername] as Address
       );
       console.log(result);
@@ -113,8 +128,8 @@ const VaultsContainer = () => {
       depositAmount={depositAmount}
       setDepositAmount={setDepositAmount}
       setSelectedUsername={setSelectedUsername}
-      handleWithdraw={handleWithdraw}
-      transaction={handleTransaction}
+      depositTransaction={handleDepositTransaction}
+      withdrawTransaction={handleWithdrawTransaction}
       onTransactionConfirmed={handleSuccess}
       onError={handleError}
     />
