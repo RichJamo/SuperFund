@@ -101,3 +101,15 @@ export const handleWithdrawal = async (account, withdrawAmount: string, clientAd
   return waitForReceiptOptions;
 };
 
+export const fetchUserVaultBalance = async (clientAddress: Address, vaultAddress: Address) => {
+  const contract = getContract({
+    client,
+    chain: optimism,
+    address: vaultAddress
+  });
+  const balance = await getBalance({
+    contract,
+    address: clientAddress
+  });
+  return balance?.displayValue;
+}

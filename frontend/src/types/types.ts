@@ -6,6 +6,7 @@ export interface Vault {
   name: string;
   totalAssets: string;
   apy7d: string;
+  userBalance?: string; // Add userBalance field for optional data
 }
 
 export interface NewUserModalProps {
@@ -17,3 +18,4 @@ export interface NewUserModalProps {
   onChangeUsername?: (username: string) => void; // Optional if you want to pass the handler to update the username
   onCreateAccount?: () => void; // Optional if you want to pass the handler to create the account
 }
+

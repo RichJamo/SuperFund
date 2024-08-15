@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { fetchUsersData, fetchVaultData } from "../utils/api";
 import { formatTotalAssets } from "../utils/utils";
-import { handleApproveAndDeposit, handleWithdrawal } from "../actions/actions";
+import {
+  handleApproveAndDeposit,
+  handleWithdrawal,
+  fetchUserVaultBalance
+} from "../actions/actions";
 import VaultsView from "../components/VaultsView";
 import { Vault } from "../types/types";
 import { VAULT_IDS } from "../constants/index";
@@ -90,7 +94,8 @@ const VaultsContainer = () => {
 
   useEffect(() => {
     async function init() {
-      await fetchVaultData(VAULT_IDS).then(data => {
+      try {
+        const data = await fetchVaultData(VAULT_IDS);
         if (data?.vaultBasics && data?.vaultDatas) {
           const formattedVaults = data.vaultBasics.map((vault, index) => {
             const vaultData = data.vaultDatas.find(v => v.id === vault.id);
@@ -111,26 +116,55 @@ const VaultsContainer = () => {
               pricePerVaultShare: vaultData
                 ? vaultData.pricePerVaultShare
                 : "N/A",
-              apy7d: ["13.73%", "12.00%", "6.94%", "0.04%", "0.06%"][index]
+              apy7d: ["13.73%", "12.00%", "6.94%", "0.04%", "0.06%"][index],
+              userBalance: "N/A" // Initialize with "N/A"
             };
           });
+
           setVaults(formattedVaults);
         }
-      });
 
-      await fetchUsersData().then(data => {
-        const resolvedUsernames = Object.keys(data);
-        const resolvedUserMap = data;
+        const userData = await fetchUsersData();
+        const resolvedUsernames = Object.keys(userData);
+        const resolvedUserMap = userData;
 
         setUsernames(resolvedUsernames);
         setUserMap(resolvedUserMap);
-      });
-
-      setLoading(false);
+        if (resolvedUsernames.length > 0 && !selectedUsername) {
+          setSelectedUsername(resolvedUsernames[0]); // Set default user only if none is selected
+        }
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
     init();
-  }, []);
+  }, []); // Run only on component mount
+
+  useEffect(() => {
+    async function updateUserVaultBalances() {
+      if (!selectedUsername || !userMap[selectedUsername]) return;
+
+      const updatedVaults = [...vaults];
+
+      for (const vault of updatedVaults) {
+        try {
+          const balance = await fetchUserVaultBalance(
+            userMap[selectedUsername] as Address,
+            vault.id as Address
+          );
+          vault.userBalance = balance;
+        } catch (error) {
+          console.error(`Error fetching balance for vault ${vault.id}:`, error);
+          vault.userBalance = "Error";
+        }
+      }
+      setVaults(updatedVaults);
+    }
+    updateUserVaultBalances();
+  }, [selectedUsername, userMap]); // Run whenever selectedUsername or userMap changes
 
   const handleUserChange = (username: string) => {
     setSelectedUsername(username);

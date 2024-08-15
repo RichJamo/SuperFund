@@ -1,15 +1,7 @@
 import React from "react";
 import Dropdown from "./Dropdown";
 import { TransactionButton } from "thirdweb/react";
-
-interface Vault {
-  id: string;
-  chain: string;
-  protocol: string;
-  name: string;
-  totalAssets: string;
-  apy7d: string;
-}
+import { Vault } from "../types/types";
 
 interface VaultsViewProps {
   loading: boolean;
@@ -76,6 +68,9 @@ const VaultsView: React.FC<VaultsViewProps> = ({
                   7d APY
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 tracking-wider">
+                  User Balance
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -92,6 +87,9 @@ const VaultsView: React.FC<VaultsViewProps> = ({
                     {vault.totalAssets}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">{vault.apy7d}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {vault.userBalance || "N/A"}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <TransactionButton
                       transaction={depositTransaction}
