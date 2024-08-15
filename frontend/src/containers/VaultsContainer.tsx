@@ -16,7 +16,7 @@ import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { USDC_CONTRACT_ADDRESS } from "../constants";
 import { AAVE_USDC_POOL_ADDRESS } from "../constants";
 import { sendBatchTransaction } from "thirdweb";
-import { smartWallet } from "thirdweb/wallets";
+import { smartWallet, Account } from "thirdweb/wallets";
 import { getBalance } from "thirdweb/extensions/erc20";
 
 const contract = getContract({
