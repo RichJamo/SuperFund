@@ -19,3 +19,20 @@ export interface NewUserModalProps {
   onCreateAccount?: () => void; // Optional if you want to pass the handler to create the account
 }
 
+export interface PermitSingle {
+  details: {
+    token: string;
+    amount: string;
+    expiration: number;
+    nonce: number;
+  };
+  spender: string;
+  sigDeadline: number;
+}
+
+export interface Domain {
+  name: string;
+  version: string;
+  chainId: number;
+  verifyingContract: string;
+}

@@ -1,30 +1,29 @@
 // Define the nested tuple type for LiqRequest
 type LiqRequestTuple = [
-  `0x${string}`,  // txData
-  string,         // token
-  string,         // interimToken
-  number,         // bridgeId
-  bigint,         // liqDstChainId
-  bigint          // nativeAmount
+  `0x${string}`,  // txData - bytes
+  string,         // token - address
+  string,         // interimToken - address
+  number,         // bridgeId - uint8
+  bigint,         // liqDstChainId - uint64
+  bigint          // nativeAmount - uint256
 ];
 
 // Define the main tuple type for SingleVaultSFData
-type DepositTuple = [
-  bigint,             // superformId
-  bigint,             // amount
-  bigint,             // outputAmount
-  bigint,             // maxSlippage
+type DepositTuple = [[
+  bigint,             // superformId - uint256
+  bigint,             // amount - uint256
+  bigint,             // outputAmount - uint256
+  bigint,             // maxSlippage - uint256
   LiqRequestTuple,    // liqRequest
-  `0x${string}`,      // permit2data
-  boolean,            // hasDstSwap
-  boolean,            // retain4626
-  string,             // receiverAddress
-  string,             // receiverAddressSP
-  `0x${string}`       // extraFormData
-];
+  `0x${string}`,      // permit2data - bytes
+  boolean,            // hasDstSwap - bool
+  boolean,            // retain4626 - bool
+  string,             // receiverAddress - address
+  string,             // receiverAddressSP - address
+  `0x${string}`       // extraFormData - bytes
+]];
 
-
-const generatePrefilledData = (): DepositTuple => {
+export const generatePrefilledData = (): DepositTuple => {
   const data = {
     superformId: BigInt('62771017356365985756211735927334141877121434214133924007974'),
     amount: BigInt(10000),
@@ -38,16 +37,16 @@ const generatePrefilledData = (): DepositTuple => {
       liqDstChainId: BigInt(0),
       nativeAmount: BigInt(0),
     },
-    permit2data: '0x' as `0x${string}`,
+    permit2data: "0x" as `0x${string}`,
     hasDstSwap: false,
-    retain4626: false,
-    receiverAddress: '0xe9d7736e4e4b9db6d9dd6f25dbe34e1a0c3e1100',
-    receiverAddressSP: '0xe9d7736e4e4b9db6d9dd6f25dbe34e1a0c3e1100',
+    retain4626: true,
+    receiverAddress: '0xAB75E66C63307396FE8456Ea7c42CBBF3CF36298',
+    receiverAddressSP: '0xAB75E66C63307396FE8456Ea7c42CBBF3CF36298',
     extraFormData: '0x' as `0x${string}`,
   };
 
   // Flatten the data into a tuple
-  const depositTuple: DepositTuple = [
+  const depositTuple: DepositTuple =[[
     data.superformId,
     data.amount,
     data.outputAmount,
@@ -66,10 +65,9 @@ const generatePrefilledData = (): DepositTuple => {
     data.receiverAddress,
     data.receiverAddressSP,
     data.extraFormData
-  ];
+  ]];
 
   return depositTuple;
 };
 
-// Example usage
-export const depositTuple = generatePrefilledData();
+

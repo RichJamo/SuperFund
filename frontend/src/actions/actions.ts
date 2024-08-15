@@ -1,5 +1,5 @@
 // actions.ts
-import { Address, getContract, prepareContractCall } from "thirdweb";
+import { Address, getContract, prepareContractCall, readContract } from "thirdweb";
 import { client } from "../utils/client";
 import { optimism } from "thirdweb/chains";
 import { USDC_CONTRACT_ADDRESS } from "../constants";
@@ -8,59 +8,111 @@ import { SUPERFORM_ROUTER_ADDRESS } from "../constants";
 import { Account, smartWallet } from "thirdweb/wallets";
 import { sendBatchTransaction, sendTransaction } from "thirdweb";
 import { getBalance } from "thirdweb/extensions/erc20";
-import { depositTuple } from "../utils/prefilledData";
+import { generatePrefilledData } from "../utils/prefilledData";
+import { PERMIT2_CONTRACT_ADDRESS } from '../constants';
 
-
-export const handleApproveAndDeposit = async (account: Account, depositAmount: string, clientAddress: Address) => { //vaultId: string - TODO add this as an input
-  console.log("got here")
-  let contract = getContract({
-    client,
-    chain: optimism,
-    address: USDC_CONTRACT_ADDRESS
-  });
-  const approveTx = prepareContractCall({
-    contract,
-    method: "function approve(address to, uint256 value)",
-    params: [SUPERFORM_ROUTER_ADDRESS, BigInt(depositAmount)]
-  });
-  console.log("approveTx", approveTx);
-  contract = getContract({
-    client,
-    chain: optimism,
-    address: SUPERFORM_ROUTER_ADDRESS
-  });
-  // console.log("prefilled data", generatePrefilledData());
-  console.log(depositTuple)
-  const supplyTx = prepareContractCall({
-    contract,
-    method:
-      "function singleDirectSingleVaultDeposit((uint256,uint256,uint256,uint256,(bytes,address,address,uint8,uint64,uint256),bytes,bool,bool,address,address,bytes))",
-    params: [(depositTuple)]
-  });
-  console.log("supplyTx", supplyTx);
+const connectClientSmartAccount = async (EOAaccount: Account, ClientSmartAccountAddress: Address) => {
   const wallet = smartWallet({
     chain: optimism,
     sponsorGas: true, // enable sponsored transactions
     overrides: {
-      accountAddress: clientAddress // override account address
+      accountAddress: ClientSmartAccountAddress // override account address
     }
   });
-  if (!account) {
-    throw new Error("No active account found");
+  if (!EOAaccount) {
+    throw new Error("No active EOAaccount found");
   }
   await wallet.connect({
     client: client,
-    personalAccount: account
+    personalAccount: EOAaccount
   });
   let smartAccount = wallet.getAccount();
   if (!smartAccount) {
     throw new Error("No smart account found");
   }
-  console.log(smartAccount);
-  console.log("Approving and depositing...");
-  const waitForReceiptOptions = await sendBatchTransaction({
+  return smartAccount;
+}
+
+export const approvePermit2 = async (EOAaccount: Account, clientSmartAccountAddress:Address ) => {
+  let contract = getContract({
+    client,
+    chain: optimism,
+    address: PERMIT2_CONTRACT_ADDRESS
+  });
+  const expiration = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60; // 1 year from now
+  const amount = 1000000000n;
+
+  const approveTx = prepareContractCall({
+    contract,
+    method: "function approve(address token, address spender, uint160 amount, uint48 expiration)",
+    params: [USDC_CONTRACT_ADDRESS, SUPERFORM_ROUTER_ADDRESS, amount, expiration]
+  });
+  console.log("approveTx", approveTx);
+  let smartAccount = await connectClientSmartAccount(EOAaccount, clientSmartAccountAddress);
+  console.log("Approving");
+  const waitForReceiptOptions = await sendTransaction({
     account: smartAccount,
-    transactions: [approveTx, supplyTx]
+    transaction: approveTx
+  });
+
+  console.log("Transaction successful:", waitForReceiptOptions);
+  return waitForReceiptOptions;
+}
+
+export const handleApprove = async (EOAaccount: Account, clientSmartAccountAddress: Address ) => {
+  let contract = getContract({
+    client,
+    chain: optimism,
+    address: USDC_CONTRACT_ADDRESS
+  });
+  const amount = 1000000000n;
+
+  const approveTx = prepareContractCall({
+    contract,
+    method: "function approve(address spender, uint256 amount)",
+    params: [SUPERFORM_ROUTER_ADDRESS, amount]
+  });
+  let smartAccount = await connectClientSmartAccount(EOAaccount, clientSmartAccountAddress);
+  
+  console.log("Approving");
+  const waitForReceiptOptions = await sendTransaction({
+    account: smartAccount,
+    transaction: approveTx
+  });
+
+  console.log("Transaction successful:", waitForReceiptOptions);
+  return waitForReceiptOptions;
+}
+
+export const handleDeposit = async (EOAaccount: Account, depositAmount: BigInt, clientSmartAccountAddress: Address) => {
+  let smartAccount = await connectClientSmartAccount(EOAaccount, clientSmartAccountAddress);
+  if (!smartAccount) {
+    throw new Error("No smart account found");
+  }
+  console.log(smartAccount);
+
+  const contract = getContract({
+    client,
+    chain: optimism,
+    address: SUPERFORM_ROUTER_ADDRESS
+  });
+
+  const depositTuple = generatePrefilledData();
+  console.log(depositTuple);
+
+  const supplyTx = prepareContractCall({
+    contract,
+    method: "function singleDirectSingleVaultDeposit(struct)",
+    params: [depositTuple]
+  });
+
+  console.log("supplyTx", supplyTx);
+
+  console.log("Depositing...");
+
+  const waitForReceiptOptions = await sendTransaction({
+    account: smartAccount,
+    transaction: supplyTx
   });
 
   console.log("Transaction successful:", waitForReceiptOptions);
@@ -69,8 +121,7 @@ export const handleApproveAndDeposit = async (account: Account, depositAmount: s
 
 
 
-
-// export const handleApproveAndDeposit = async (account: Account, depositAmount: string, clientAddress: Address) => { //vaultId: string - TODO add this as an input
+// export const handleDeposit = async (EOAaccount: Account, depositAmount: string, clientSmartAccountAddress: Address) => { //vaultId: string - TODO add this as an input
 //   console.log("got here")
 //   let contract = getContract({
 //     client,
@@ -91,21 +142,21 @@ export const handleApproveAndDeposit = async (account: Account, depositAmount: s
 //     contract,
 //     method:
 //       "function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode)",
-//     params: [USDC_CONTRACT_ADDRESS, BigInt(depositAmount), clientAddress, 0]
+//     params: [USDC_CONTRACT_ADDRESS, BigInt(depositAmount), clientSmartAccountAddress, 0]
 //   });
 //   const wallet = smartWallet({
 //     chain: optimism,
 //     sponsorGas: true, // enable sponsored transactions
 //     overrides: {
-//       accountAddress: clientAddress // override account address
+//       accountAddress: clientSmartAccountAddress // override account address
 //     }
 //   });
-//   if (!account) {
+//   if (!EOAaccount) {
 //     throw new Error("No active account found");
 //   }
 //   await wallet.connect({
 //     client: client,
-//     personalAccount: account
+//     personalAccount: EOAaccount
 //   });
 //   let smartAccount = wallet.getAccount();
 //   if (!smartAccount) {
@@ -122,7 +173,7 @@ export const handleApproveAndDeposit = async (account: Account, depositAmount: s
 //   return waitForReceiptOptions;
 // };
 
-export const handleWithdrawal = async (account: Account, withdrawAmount: string, clientAddress: Address) => { //vaultId: string
+export const handleWithdrawal = async (EOAaccount: Account, withdrawAmount: string, clientSmartAccountAddress: Address) => { //vaultId: string
   const contract = getContract({
     client,
     chain: optimism,
@@ -132,28 +183,15 @@ export const handleWithdrawal = async (account: Account, withdrawAmount: string,
     contract,
     method:
       "function withdraw(address asset, uint256 amount, address to)",
-    params: [USDC_CONTRACT_ADDRESS, BigInt(withdrawAmount), clientAddress] // what amount should I set here? Get balance first?
+    params: [USDC_CONTRACT_ADDRESS, BigInt(withdrawAmount), clientSmartAccountAddress] // what amount should I set here? Get balance first?
   });
-  const wallet = smartWallet({
-    chain: optimism,
-    sponsorGas: true, // enable sponsored transactions
-    overrides: {
-      accountAddress: clientAddress // override account address
-    }
-  });
-  if (!account) {
-    throw new Error("No active account found");
-  }
-  await wallet.connect({
-    client: client,
-    personalAccount: account
-  });
-  let smartAccount = wallet.getAccount();
+  
+  let smartAccount = await connectClientSmartAccount(EOAaccount, clientSmartAccountAddress);
   if (!smartAccount) {
     throw new Error("No smart account found");
   }
   console.log(smartAccount);
-  console.log("Approving and depositing...");
+  console.log("Withdrawing...");
   const waitForReceiptOptions = await sendTransaction({
     account: smartAccount,
     transaction: withdrawTx
@@ -163,7 +201,7 @@ export const handleWithdrawal = async (account: Account, withdrawAmount: string,
   return waitForReceiptOptions;
 };
 
-export const fetchUserVaultBalance = async (clientAddress: Address, vaultAddress: Address) => {
+export const fetchUserVaultBalance = async (clientSmartAccountAddress: Address, vaultAddress: Address) => {
   const contract = getContract({
     client,
     chain: optimism,
@@ -171,7 +209,7 @@ export const fetchUserVaultBalance = async (clientAddress: Address, vaultAddress
   });
   const balance = await getBalance({
     contract,
-    address: clientAddress
+    address: clientSmartAccountAddress
   });
   return balance?.displayValue;
 }

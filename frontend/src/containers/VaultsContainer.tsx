@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { fetchUsersData, fetchVaultData } from "../utils/api";
 import { formatTotalAssets } from "../utils/utils";
 import {
-  handleApproveAndDeposit,
+  handleApprove,
+  handleDeposit,
   handleWithdrawal,
   fetchUserVaultBalance
 } from "../actions/actions";
@@ -14,9 +15,6 @@ import { client } from "../utils/client";
 import { optimism } from "thirdweb/chains";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { USDC_CONTRACT_ADDRESS } from "../constants";
-import { AAVE_USDC_POOL_ADDRESS } from "../constants";
-import { sendBatchTransaction } from "thirdweb";
-import { smartWallet, Account } from "thirdweb/wallets";
 import { getBalance } from "thirdweb/extensions/erc20";
 
 const contract = getContract({
@@ -43,7 +41,11 @@ const VaultsContainer = () => {
     // Handle error logic here
   };
 
-  const account = useActiveAccount();
+  const EOAaccount = useActiveAccount();
+  if (!EOAaccount) {
+    throw new Error("No active account found");
+  }
+  console.log("EOAaccount", EOAaccount);
 
   const { data: usdcBalanceResult, isLoading, error } = useReadContract(
     getBalance,
@@ -59,13 +61,26 @@ const VaultsContainer = () => {
     ? "Error"
     : usdcBalanceResult?.displayValue || "N/A";
 
+  const handleApproveTransaction = async () => {
+    try {
+      console.log("Approving...");
+      const result = await handleApprove(
+        EOAaccount,
+        userMap[selectedUsername] as Address
+      );
+      return result;
+    } catch (error) {
+      throw new Error("Transaction failed");
+    }
+  };
+
   const handleDepositTransaction = async () => {
     try {
       console.log("Depositing to vault...");
       setDepositAmount;
       console.log(depositAmount);
-      const result = await handleApproveAndDeposit(
-        account,
+      const result = await handleDeposit(
+        EOAaccount,
         depositAmount,
         userMap[selectedUsername] as Address
       );
@@ -81,7 +96,7 @@ const VaultsContainer = () => {
       console.log("Withdrawing from vault...");
       let withdrawAmount = "10000";
       const result = await handleWithdrawal(
-        account,
+        EOAaccount,
         withdrawAmount,
         userMap[selectedUsername] as Address
       );
