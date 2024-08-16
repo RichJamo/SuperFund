@@ -1,3 +1,4 @@
+import { OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
 import {UserData} from "../types/types";
 
 export const fetchUsersData = async (): Promise<UserData> => {
@@ -19,7 +20,7 @@ export const fetchVaultData = async (vaultIds: string[]) => {
 
   try {
     const response = await fetch(
-      "https://api.goldsky.com/api/public/project_cl94kmyjc05xp0ixtdmoahbtu/subgraphs/superform-v1-10/1.1.2/gn",
+      OPTIMISM_SUBGRAPH_URL,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
