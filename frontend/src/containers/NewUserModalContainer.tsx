@@ -12,7 +12,6 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
 }) => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  // const [transactionResult, setTransactionResult] = useState<any>(null);
 
   const { contract, myEvent } = useContractSetup();
   const activeAccount = useActiveAccount();
@@ -34,8 +33,7 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
   const handleCreateAccount = async () => {
     try {
       setIsLoading(true);
-      createAccount(username); // const result = ?
-      // setTransactionResult(result); // Set the transaction result
+      createAccount(username);
     } catch (error) {
       console.error("Error creating new account:", error);
       alert("Failed to create new account");
@@ -62,7 +60,7 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
       onRequestClose={onRequestClose}
       username={username}
       isLoading={isLoading}
-      onChangeUsername={setUsername} // Ensure this function updates the username state
+      onChangeUsername={setUsername}
       onCreateAccount={handleCreateAccount}
       onAddUser={onAddUser}
     />
