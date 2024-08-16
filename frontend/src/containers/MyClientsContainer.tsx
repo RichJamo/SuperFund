@@ -1,28 +1,32 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import MyClientsView from "../components/MyClientsView";
-import { fetchUsersData } from "../utils/api"; // Refactor API call
-import { useContractBalance } from "../hooks/hooks"; // Refactor contract balance logic
+import { fetchUsersData } from "../utils/api";
+import { useContractBalance } from "../hooks/hooks";
+import { UserData } from "../types/types";
 
 function MyClientsContainer() {
   const [usernames, setUsernames] = useState<string[]>([]);
   const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data, isLoading } = useContractBalance(userMap);
+
+  const { data: balanceData, isLoading } = useContractBalance(userMap);
 
   useEffect(() => {
     async function getUsers() {
-      const data = await fetchUsersData();
-      const usersArray = Object.entries(data).map(([username, address]) => ({
-        username,
-        address
-      }));
+      const userData: UserData = await fetchUsersData();
+      const usersArray = Object.entries(userData).map(
+        ([username, address]) => ({
+          username,
+          address
+        })
+      );
 
       setUsernames(usersArray.map(user => user.username));
       setUserMap(
         usersArray.reduce((map, user) => {
           map[user.username] = user.address;
           return map;
-        }, {})
+        }, {} as { [key: string]: string })
       );
     }
 
@@ -56,7 +60,7 @@ function MyClientsContainer() {
     <MyClientsView
       usernames={usernames}
       userMap={userMap}
-      data={data}
+      balanceData={balanceData}
       isLoading={isLoading}
       isModalOpen={isModalOpen}
       setIsModalOpen={setIsModalOpen}

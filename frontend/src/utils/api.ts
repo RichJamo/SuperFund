@@ -1,10 +1,11 @@
-// api.ts
-export const fetchUsersData = async () => {
+import {UserData} from "../types/types";
+
+export const fetchUsersData = async (): Promise<UserData> => {
   try {
     const response = await fetch("http://localhost:4000/api/users");
     if (!response.ok) throw new Error("Failed to fetch users");
 
-    const data = await response.json();
+    const data: UserData = await response.json(); // Explicitly type the data
     return data;
   } catch (error) {
     console.error("Error fetching users:", error);

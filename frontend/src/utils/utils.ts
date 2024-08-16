@@ -1,9 +1,8 @@
 // utils.ts
-import { readContract } from "thirdweb";
+import { readContract, getContract } from "thirdweb";
 import { PERMIT2_CONTRACT_ADDRESS, SUPERFORM_ROUTER_ADDRESS, USDC_CONTRACT_ADDRESS } from "../constants";
 import { PermitSingle, Domain } from "../types/types";
 import { signTypedData } from "thirdweb/utils";
-import { getContract} from "thirdweb";
 import { client } from "./client"; 
 import { optimism } from "thirdweb/chains";
 
@@ -17,24 +16,17 @@ export const formatTotalAssets = (totalAssets: string, decimals: number): string
   });
 };
 
-export const handleEventLog = (
-  eventLog: any,
-  transactionResult: any,
-  prevTransactionRef: React.MutableRefObject<any>,
-  onAddUser: (username: string, walletAddress: string) => void,
-  onRequestClose: () => void,
-  username: string
-) => {
+export const getWalletAddressOnceCreated = (eventLog, transactionResult, prevTransactionRef) => {
   if (transactionResult && transactionResult !== prevTransactionRef.current) {
     prevTransactionRef.current = transactionResult;
     if (eventLog && eventLog.length > 0) {
       const latestEvent = eventLog[eventLog.length - 1];
       if (latestEvent && latestEvent.topics[1]) {
-        onAddUser(username, formatAddress(latestEvent.topics[1]));
-        onRequestClose();
+        return formatAddress(latestEvent.topics[1]);
       }
     }
   }
+  return null;
 };
 
 export function formatAddress(rawAddress: string): string {

@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useActiveAccount, useContractEvents } from "thirdweb/react";
 import NewUserModalView from "../components/NewUserModalView";
-import { useContractSetup } from "../hooks/hooks";
-import { useCreateAccount } from "../hooks/hooks";
-import { handleEventLog } from "../utils/utils";
+import { useContractSetup, useCreateAccount } from "../hooks/hooks";
+import { getWalletAddressOnceCreated } from "../utils/utils";
 import { NewUserModalProps } from "../types/types";
 
 const NewUserModalContainer: React.FC<NewUserModalProps> = ({
@@ -13,9 +12,11 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
 }) => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  // const [transactionResult, setTransactionResult] = useState<any>(null);
 
   const { contract, myEvent } = useContractSetup();
   const activeAccount = useActiveAccount();
+
   const { createAccount, transactionResult } = useCreateAccount(
     contract,
     activeAccount
@@ -25,24 +26,16 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
     contract,
     events: [myEvent]
   });
+  console.log(eventLog);
 
   const prevTransactionRef = useRef<any | null>(null);
-
-  useEffect(() => {
-    handleEventLog(
-      eventLog,
-      transactionResult,
-      prevTransactionRef,
-      onAddUser,
-      onRequestClose,
-      username
-    );
-  }, [eventLog, transactionResult]);
+  console.log(transactionResult);
 
   const handleCreateAccount = async () => {
     try {
       setIsLoading(true);
-      createAccount(username);
+      createAccount(username); // const result = ?
+      // setTransactionResult(result); // Set the transaction result
     } catch (error) {
       console.error("Error creating new account:", error);
       alert("Failed to create new account");
@@ -51,14 +44,27 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
     }
   };
 
+  useEffect(() => {
+    const walletAddress = getWalletAddressOnceCreated(
+      eventLog,
+      transactionResult,
+      prevTransactionRef
+    );
+    if (walletAddress) {
+      onAddUser(username, walletAddress);
+      onRequestClose();
+    }
+  }, [eventLog, transactionResult]);
+
   return (
     <NewUserModalView
       isOpen={isOpen}
       onRequestClose={onRequestClose}
       username={username}
       isLoading={isLoading}
-      onChangeUsername={setUsername}
+      onChangeUsername={setUsername} // Ensure this function updates the username state
       onCreateAccount={handleCreateAccount}
+      onAddUser={onAddUser}
     />
   );
 };

@@ -8,6 +8,7 @@ interface NewUserModalViewProps {
   isLoading: boolean;
   onChangeUsername: (username: string) => void;
   onCreateAccount: () => void;
+  onAddUser: (username: string, walletAddress: string) => void; // Add this line
 }
 
 const NewUserModalView: React.FC<NewUserModalViewProps> = ({

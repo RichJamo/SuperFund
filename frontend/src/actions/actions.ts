@@ -1,22 +1,17 @@
-// actions.ts
-import { Address, getContract, prepareContractCall, readContract } from "thirdweb";
+import { Address, getContract, prepareContractCall, sendTransaction } from "thirdweb";
 import { client } from "../utils/client";
 import { optimism } from "thirdweb/chains";
-import { USDC_CONTRACT_ADDRESS } from "../constants";
-import { AAVE_USDC_POOL_ADDRESS } from "../constants";
-import { SUPERFORM_ROUTER_ADDRESS } from "../constants";
+import { USDC_CONTRACT_ADDRESS, AAVE_USDC_POOL_ADDRESS, SUPERFORM_ROUTER_ADDRESS, PERMIT2_CONTRACT_ADDRESS } from "../constants";
 import { Account, smartWallet } from "thirdweb/wallets";
-import { sendBatchTransaction, sendTransaction } from "thirdweb";
 import { getBalance } from "thirdweb/extensions/erc20";
 import { generatePrefilledData } from "../utils/prefilledData";
-import { PERMIT2_CONTRACT_ADDRESS } from '../constants';
 
 const connectClientSmartAccount = async (EOAaccount: Account, ClientSmartAccountAddress: Address) => {
   const wallet = smartWallet({
     chain: optimism,
-    sponsorGas: true, // enable sponsored transactions
+    sponsorGas: true,
     overrides: {
-      accountAddress: ClientSmartAccountAddress // override account address
+      accountAddress: ClientSmartAccountAddress // specify account address of client
     }
   });
   if (!EOAaccount) {
@@ -33,7 +28,7 @@ const connectClientSmartAccount = async (EOAaccount: Account, ClientSmartAccount
   return smartAccount;
 }
 
-export const approvePermit2 = async (EOAaccount: Account, clientSmartAccountAddress:Address ) => {
+export const handleapprovePermit2 = async (EOAaccount: Account, clientSmartAccountAddress:Address ) => {
   let contract = getContract({
     client,
     chain: optimism,
@@ -47,14 +42,12 @@ export const approvePermit2 = async (EOAaccount: Account, clientSmartAccountAddr
     method: "function approve(address token, address spender, uint160 amount, uint48 expiration)",
     params: [USDC_CONTRACT_ADDRESS, SUPERFORM_ROUTER_ADDRESS, amount, expiration]
   });
-  console.log("approveTx", approveTx);
   let smartAccount = await connectClientSmartAccount(EOAaccount, clientSmartAccountAddress);
   console.log("Approving");
   const waitForReceiptOptions = await sendTransaction({
     account: smartAccount,
     transaction: approveTx
   });
-
   console.log("Transaction successful:", waitForReceiptOptions);
   return waitForReceiptOptions;
 }

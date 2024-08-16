@@ -1,11 +1,11 @@
 import React from "react";
-import NewUserModal from "./NewUserModalView";
+import NewUserModalContainer from "../containers/NewUserModalContainer";
 
 interface MyClientsViewProps {
   usernames: string[];
   userMap: { [key: string]: string };
-  data: number; // Adjust based on actual data type
-  isLoading: boolean;
+  balanceData: bigint | null;
+  isLoading: boolean | undefined;
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
   handleAddUser: (username: string, walletAddress: string) => void;
@@ -14,7 +14,7 @@ interface MyClientsViewProps {
 const MyClientsView: React.FC<MyClientsViewProps> = ({
   usernames,
   userMap,
-  data,
+  balanceData,
   isLoading,
   isModalOpen,
   setIsModalOpen,
@@ -44,7 +44,11 @@ const MyClientsView: React.FC<MyClientsViewProps> = ({
                     {walletAddress}
                   </td>
                   <td className="py-2 px-4 border-b text-gray-400">
-                    {isLoading ? "Loading..." : data ? data.toString() : "N/A"}
+                    {isLoading
+                      ? "Loading..."
+                      : balanceData
+                      ? balanceData.toString()
+                      : "N/A"}
                   </td>
                 </tr>
               );
@@ -58,7 +62,7 @@ const MyClientsView: React.FC<MyClientsViewProps> = ({
       >
         New Client
       </button>
-      <NewUserModal
+      <NewUserModalContainer
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}
         onAddUser={handleAddUser}

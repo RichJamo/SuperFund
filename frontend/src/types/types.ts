@@ -36,3 +36,7 @@ export interface Domain {
   chainId: number;
   verifyingContract: string;
 }
+
+export interface UserData {
+  [username: string]: string;
+}

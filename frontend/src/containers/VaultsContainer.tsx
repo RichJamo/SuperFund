@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchUsersData, fetchVaultData } from "../utils/api";
 import { formatTotalAssets } from "../utils/utils";
 import {
@@ -9,12 +9,11 @@ import {
 } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
 import { Vault } from "../types/types";
-import { VAULT_IDS } from "../constants/index";
-import { Address, getContract, prepareContractCall } from "thirdweb";
+import { VAULT_IDS, USDC_CONTRACT_ADDRESS } from "../constants/index";
+import { Address, getContract } from "thirdweb";
 import { client } from "../utils/client";
 import { optimism } from "thirdweb/chains";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
-import { USDC_CONTRACT_ADDRESS } from "../constants";
 import { getBalance } from "thirdweb/extensions/erc20";
 
 const contract = getContract({
@@ -81,7 +80,7 @@ const VaultsContainer = () => {
       console.log(depositAmount);
       const result = await handleDeposit(
         EOAaccount,
-        depositAmount,
+        BigInt(depositAmount),
         userMap[selectedUsername] as Address
       );
       console.log(result);
@@ -183,12 +182,6 @@ const VaultsContainer = () => {
 
   const handleUserChange = (username: string) => {
     setSelectedUsername(username);
-    // Logic to display account balances based on the selected user
-    // For example, fetch user account details and update active account
-    // const userWalletAddress = getUserWalletAddress(username); // Replace with actual method to get address
-    // if (userWalletAddress) {
-    //   setActiveAccount(userWalletAddress);
-    // }
   };
 
   return (
@@ -204,7 +197,7 @@ const VaultsContainer = () => {
       withdrawTransaction={handleWithdrawTransaction}
       onTransactionConfirmed={handleSuccess}
       onError={handleError}
-      usdcBalance={usdcBalance} // Pass USDC balance
+      usdcBalance={usdcBalance}
     />
   );
 };
