@@ -124,7 +124,7 @@ export const handleDeposit = async (vaultId: Address, EOAaccount: Account, trans
   return waitForReceiptOptions;
 };
 
-export const handleWithdrawal = async (vaultId: Address, EOAaccount: Account, withdrawAmount: string, clientSmartAccountAddress: Address) => { //vaultId: string
+export const handleWithdrawal = async (vaultId: Address, EOAaccount: Account, withdrawAmount: bigint, clientSmartAccountAddress: Address) => { //vaultId: string
   let contract = getContract({
     client,
     chain: optimism,

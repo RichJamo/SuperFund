@@ -25,7 +25,7 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
     contract,
     events: [myEvent]
   });
-  console.log(eventLog);
+  console.log("EventLog:", eventLog);
 
   const prevTransactionRef = useRef<any | null>(null);
   console.log(transactionResult);

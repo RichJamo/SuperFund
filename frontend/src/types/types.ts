@@ -36,7 +36,36 @@ export interface Domain {
   chainId: number;
   verifyingContract: string;
 }
+export interface Rate {
+  id: string;
+  type: string;
+  rate: string;
+}
 
+export interface VaultData {
+  id: string;
+  inputToken: {
+    symbol: string;
+    decimals: number;
+  };
+  name: string;
+  rates: Rate[];
+  totalValueLockedUSD: string;
+}
+
+export interface FormattedVault {
+  id: string;
+  name: string;
+  symbol: string;
+  chain: string;
+  protocol: string;
+  totalAssets: string;
+  previewPPS: string;
+  pricePerVaultShare: string;
+  apy7d: string;
+  userBalance: string;
+}
 export interface UserData {
   [username: string]: string;
 }
+

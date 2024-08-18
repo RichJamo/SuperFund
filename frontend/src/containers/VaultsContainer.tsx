@@ -8,7 +8,13 @@ import {
   fetchUserVaultBalance
 } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
-import { Vault } from "../types/types";
+import {
+  Vault,
+  Rate,
+  FormattedVault,
+  UserData,
+  VaultData
+} from "../types/types";
 import { VAULT_IDS, USDC_CONTRACT_ADDRESS } from "../constants/index";
 import { Address, getContract } from "thirdweb";
 import { client } from "../utils/client";
@@ -23,12 +29,12 @@ const contract = getContract({
 });
 
 const VaultsContainer = () => {
-  const [vaults, setVaults] = useState<Vault[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [vaults, setVaults] = useState<FormattedVault[]>([]);
   const [transactionAmount, setTransactionAmount] = useState("");
   const [usernames, setUsernames] = useState<string[]>([]);
   const [selectedUsername, setSelectedUsername] = useState<string>("");
-  const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
+  const [userMap, setUserMap] = useState<UserData>({});
+  const [loading, setLoading] = useState<boolean>(true);
 
   const handleSuccess = (transactionResult: any) => {
     console.log("Transaction successful:", transactionResult);
@@ -73,7 +79,7 @@ const VaultsContainer = () => {
     }
   };
 
-  const handleDepositTransaction = async vaultId => {
+  const handleDepositTransaction = async (vaultId: Address) => {
     try {
       console.log("Depositing to vault...");
       setTransactionAmount;
@@ -90,7 +96,7 @@ const VaultsContainer = () => {
     }
   };
 
-  const handleWithdrawTransaction = async vaultId => {
+  const handleWithdrawTransaction = async (vaultId: Address) => {
     try {
       console.log("Withdrawing from vault...");
       setTransactionAmount;
@@ -110,10 +116,10 @@ const VaultsContainer = () => {
   useEffect(() => {
     async function init() {
       try {
-        const data = await fetchVaultData(VAULT_IDS);
+        const data: VaultData[] = await fetchVaultData(VAULT_IDS);
 
         // Assuming data is an array of objects with the new structure
-        const formattedVaults = data.map((vaultData, index) => {
+        const formattedVaults: FormattedVault[] = data.map(vaultData => {
           const {
             id,
             inputToken,
@@ -155,7 +161,7 @@ const VaultsContainer = () => {
         setVaults(formattedVaults);
 
         // Fetch and set user data if necessary
-        const userData = await fetchUsersData();
+        const userData: UserData = await fetchUsersData();
         const resolvedUsernames = Object.keys(userData);
         const resolvedUserMap = userData;
 
