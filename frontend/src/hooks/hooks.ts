@@ -29,10 +29,15 @@ const contract = getContract({
 
 export function useContractBalance(userMap: { [key: string]: string }) {
   // This can be further adjusted to accommodate individual calls for each user
-  const walletAddress = Object.values(userMap)[0];
+  const contract = getContract({
+    client,
+    chain: optimism,
+    address: USDC_CONTRACT_ADDRESS
+  });
+  const walletAddress = Object.values(userMap)[2];
   const { data, isLoading } = useReadContract({
     contract,
-    method: "balanceOf",
+    method: "balanceOf(address client) view returns (uint256 balance)",
     params: [walletAddress || ""],
     queryOptions: { enabled: !!walletAddress }
   });

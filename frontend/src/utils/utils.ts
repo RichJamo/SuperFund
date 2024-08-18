@@ -7,7 +7,7 @@ import { client } from "./client";
 import { optimism } from "thirdweb/chains";
 
 export const formatTotalAssets = (totalAssets: string, decimals: number): string => {
-  const value = Number(totalAssets) / Math.pow(10, decimals);
+  const value = Number(totalAssets) // / Math.pow(10, decimals); - don't need to divide by decimals since the subgraph gives a dollar amount
   return value.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",

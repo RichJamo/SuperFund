@@ -1,12 +1,12 @@
-import { OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
-import {UserData} from "../types/types";
+import { AAVE_OPTIMISM_SUBGRAPH_URL, OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
+import { UserData } from "../types/types";
 
 export const fetchUsersData = async (): Promise<UserData> => {
   try {
     const response = await fetch("http://localhost:4000/api/users");
     if (!response.ok) throw new Error("Failed to fetch users");
 
-    const data: UserData = await response.json(); // Explicitly type the data
+    const data: UserData = await response.json();
     return data;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -14,31 +14,31 @@ export const fetchUsersData = async (): Promise<UserData> => {
   }
 };
 
-export const fetchVaultData = async (vaultIds: string[]) => {
-  const vaultIdsLowercase = vaultIds.map(id => id.toLowerCase());
-  const vaultIdsString = vaultIdsLowercase.map(id => `"${id}"`).join(",");
+export const fetchVaultData = async (vaultIds: string[]): Promise<any> => {
+  const vaultIdsString = vaultIds.map(id => `"${id.toLowerCase()}"`).join(",");
 
   try {
     const response = await fetch(
-      OPTIMISM_SUBGRAPH_URL,
+      AAVE_OPTIMISM_SUBGRAPH_URL,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
             {
-              vaultBasics(where: { id_in: [${vaultIdsString}] }) {
+              markets(where: {id_in: [${vaultIdsString}]}) {
                 id
                 name
-                symbol
-                decimals
-              }
-              vaultDatas(where: { id_in: [${vaultIdsString}] }) {
-                id
-                totalAssets
-                formBalance
-                previewPPS
-                pricePerVaultShare
+                inputToken {
+                  symbol
+                  decimals
+                }
+                totalValueLockedUSD
+                rates {
+                  id
+                  rate
+                  type
+                }
               }
             }
           `
@@ -46,10 +46,18 @@ export const fetchVaultData = async (vaultIds: string[]) => {
       }
     );
 
-    const result = await response.json();
-    return result.data;
+    const data = await response.json();
+    if (data.errors) {
+      console.error("Error fetching data:", data.errors);
+      return null;
+    }
+
+    const result = data.data.markets;
+    console.log(result); // This will print the details of the markets
+    return result;
+
   } catch (error) {
-    console.error("Error fetching vault data:", error);
+    console.error("Error fetching Aave data:", error);
     throw error;
   }
 };

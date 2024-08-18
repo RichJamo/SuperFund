@@ -25,7 +25,7 @@ const contract = getContract({
 const VaultsContainer = () => {
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [loading, setLoading] = useState(true);
-  const [depositAmount, setDepositAmount] = useState("");
+  const [transactionAmount, setTransactionAmount] = useState("");
   const [usernames, setUsernames] = useState<string[]>([]);
   const [selectedUsername, setSelectedUsername] = useState<string>("");
   const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
@@ -73,14 +73,14 @@ const VaultsContainer = () => {
     }
   };
 
-  const handleDepositTransaction = async () => {
+  const handleDepositTransaction = async vaultId => {
     try {
       console.log("Depositing to vault...");
-      setDepositAmount;
-      console.log(depositAmount);
+      setTransactionAmount;
       const result = await handleDeposit(
+        vaultId,
         EOAaccount,
-        BigInt(depositAmount),
+        BigInt(transactionAmount),
         userMap[selectedUsername] as Address
       );
       console.log(result);
@@ -90,13 +90,14 @@ const VaultsContainer = () => {
     }
   };
 
-  const handleWithdrawTransaction = async () => {
+  const handleWithdrawTransaction = async vaultId => {
     try {
       console.log("Withdrawing from vault...");
-      let withdrawAmount = "10000";
+      setTransactionAmount;
       const result = await handleWithdrawal(
+        vaultId,
         EOAaccount,
-        withdrawAmount,
+        BigInt(transactionAmount),
         userMap[selectedUsername] as Address
       );
       console.log(result);
@@ -110,34 +111,50 @@ const VaultsContainer = () => {
     async function init() {
       try {
         const data = await fetchVaultData(VAULT_IDS);
-        if (data?.vaultBasics && data?.vaultDatas) {
-          const formattedVaults = data.vaultBasics.map((vault, index) => {
-            const vaultData = data.vaultDatas.find(v => v.id === vault.id);
-            return {
-              ...vault,
-              chain: "Optimism",
-              protocol: [
-                "PoolTogether",
-                "Exactly Protocol",
-                "Exactly Protocol",
-                "Aloe",
-                "Aloe"
-              ][index],
-              totalAssets: vaultData
-                ? formatTotalAssets(vaultData.totalAssets, vault.decimals)
-                : "N/A",
-              previewPPS: vaultData ? vaultData.previewPPS : "N/A",
-              pricePerVaultShare: vaultData
-                ? vaultData.pricePerVaultShare
-                : "N/A",
-              apy7d: ["13.73%", "12.00%", "6.94%", "0.04%", "0.06%"][index],
-              userBalance: "N/A" // Initialize with "N/A"
-            };
-          });
 
-          setVaults(formattedVaults);
-        }
+        // Assuming data is an array of objects with the new structure
+        const formattedVaults = data.map((vaultData, index) => {
+          const {
+            id,
+            inputToken,
+            name,
+            rates,
+            totalValueLockedUSD
+          } = vaultData;
 
+          // Find specific rate types within the rates array
+          const lenderVariableRate = rates.find(
+            rate => rate.type === "VARIABLE" && rate.id.startsWith("LENDER")
+          );
+          const borrowerVariableRate = rates.find(
+            rate => rate.type === "VARIABLE" && rate.id.startsWith("BORROWER")
+          );
+
+          return {
+            id,
+            name: name || "Unnamed Vault",
+            symbol: inputToken.symbol || "N/A",
+            chain: "Optimism", // Adjust if needed
+            protocol: "Aave", // Assuming the protocol is Aave based on the context
+            totalAssets: totalValueLockedUSD
+              ? formatTotalAssets(totalValueLockedUSD, inputToken.decimals)
+              : "N/A",
+            previewPPS: lenderVariableRate
+              ? `${parseFloat(lenderVariableRate.rate).toFixed(2)}%`
+              : "N/A",
+            pricePerVaultShare: borrowerVariableRate
+              ? `${parseFloat(borrowerVariableRate.rate).toFixed(2)}%`
+              : "N/A",
+            apy7d: lenderVariableRate
+              ? `${parseFloat(lenderVariableRate.rate).toFixed(2)}%`
+              : "N/A",
+            userBalance: "N/A" // Placeholder until you fetch actual user balances
+          };
+        });
+
+        setVaults(formattedVaults);
+
+        // Fetch and set user data if necessary
         const userData = await fetchUsersData();
         const resolvedUsernames = Object.keys(userData);
         const resolvedUserMap = userData;
@@ -190,8 +207,8 @@ const VaultsContainer = () => {
       vaults={vaults}
       usernames={usernames}
       selectedUsername={selectedUsername}
-      depositAmount={depositAmount}
-      setDepositAmount={setDepositAmount}
+      transactionAmount={transactionAmount}
+      setTransactionAmount={setTransactionAmount}
       setSelectedUsername={setSelectedUsername}
       depositTransaction={handleDepositTransaction}
       withdrawTransaction={handleWithdrawTransaction}
