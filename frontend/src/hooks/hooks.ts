@@ -5,6 +5,8 @@ import { DEFAULT_ACCOUNT_FACTORY } from "../constants/index";
 import { stringToBytes32 } from "../utils/stringToBytes32";
 import { sendTransaction } from "thirdweb";
 import { Account } from "thirdweb/wallets";
+import { USDC_CONTRACT_ADDRESS } from "../constants/index";
+import { balanceOf, getBalance } from "thirdweb/extensions/erc20";
 
 const clientId = import.meta.env.VITE_TEMPLATE_CLIENT_ID as string;
 
@@ -12,7 +14,6 @@ const client = createThirdwebClient({
   clientId: clientId
 });
 
-const USDC_CONTRACT_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
 
 const contract = getContract({
   client,
@@ -29,7 +30,7 @@ const contract = getContract({
   ]
 });
 
-export function useContractBalance(userMap: { [key: string]: string }) {
+export function getUSDCBalance(userMap: { [key: string]: string }) {
   // This can be further adjusted to accommodate individual calls for each user
   const contract = getContract({
     client,
@@ -37,14 +38,14 @@ export function useContractBalance(userMap: { [key: string]: string }) {
     address: USDC_CONTRACT_ADDRESS
   });
   const walletAddress = Object.values(userMap)[2];
-  const { data, isLoading } = useReadContract({
-    contract,
-    method: "balanceOf(address client) view returns (uint256 balance)",
-    params: [walletAddress || ""],
-    queryOptions: { enabled: !!walletAddress }
-  });
-  const formattedData: bigint | null = data ? BigInt(data[0] as bigint) : null;
+  console.log("walletAddress", walletAddress);
+  const { data, isLoading, error, isError } = useReadContract(balanceOf, { contract, address: walletAddress });
 
+  console.log("data", data);
+  if (isError) {
+    console.error("Error fetching balance:", error);
+  }
+  const formattedData: bigint | null = data ? BigInt(data as bigint) : null;
   return { data: formattedData, isLoading };
 }
 

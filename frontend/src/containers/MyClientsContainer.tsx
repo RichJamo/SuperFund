@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import MyClientsView from "../components/MyClientsView";
 import { fetchUsersData } from "../utils/api";
-import { useContractBalance } from "../hooks/hooks";
+import { getUSDCBalance } from "../hooks/hooks";
 import { UserData } from "../types/types";
 
 // Define a type for the user data map
@@ -12,7 +12,7 @@ function MyClientsContainer() {
   const [userMap, setUserMap] = useState<UserMap>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data: balanceData, isLoading } = useContractBalance(userMap);
+  const { data: balanceData, isLoading } = getUSDCBalance(userMap);
 
   useEffect(() => {
     const getUsers = async () => {
