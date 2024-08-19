@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
-import thirdwebIcon from "./styles/thirdweb.svg";
+import superfundLogo from "./styles/superfund_logo.jpg";
 import { client } from "./utils/client";
 import VaultsContainer from "./containers/VaultsContainer";
 import MyClientsContainer from "./containers/MyClientsContainer";
@@ -85,7 +85,7 @@ function Header() {
   return (
     <header className="flex flex-col items-center mb-20 md:mb-20">
       <img
-        src={thirdwebIcon}
+        src={superfundLogo}
         alt=""
         className="size-[150px] md:size-[150px]"
         style={{
