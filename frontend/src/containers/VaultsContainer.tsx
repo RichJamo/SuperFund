@@ -15,6 +15,7 @@ import { client } from "../utils/client";
 import { optimism } from "thirdweb/chains";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { getBalance } from "thirdweb/extensions/erc20";
+import { Account } from "thirdweb/wallets";
 
 const contract = getContract({
   client,
@@ -29,6 +30,7 @@ const VaultsContainer = () => {
   const [selectedUsername, setSelectedUsername] = useState<string>("");
   const [userMap, setUserMap] = useState<UserMap>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const [activeAccount, setActiveAccount] = useState<Account | null>(null);
 
   const handleSuccess = (transactionResult: any) => {
     console.log("Transaction successful:", transactionResult);
@@ -41,6 +43,13 @@ const VaultsContainer = () => {
   };
 
   const EOAaccount = useActiveAccount();
+  useEffect(() => {
+    if (EOAaccount) {
+      setActiveAccount(EOAaccount);
+    } else {
+      setActiveAccount(null);
+    }
+  }, [EOAaccount]);
   if (!EOAaccount) {
     throw new Error("No active account found");
   }
@@ -180,9 +189,11 @@ const VaultsContainer = () => {
         setLoading(false);
       }
     }
+    if (activeAccount) {
+      init();
+    }
+  }, [activeAccount]); // Run only on component mount
 
-    init();
-  }, []); // Run only on component mount
   console.log("selectedUsername", selectedUsername);
   const walletAddress = selectedUsername
     ? userMap[selectedUsername]?.walletAddress
