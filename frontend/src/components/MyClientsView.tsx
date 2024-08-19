@@ -7,10 +7,10 @@ import { USDC_CONTRACT_ADDRESS } from "../constants";
 import { client } from "../utils/client";
 import { optimism } from "thirdweb/chains";
 import { formatUSDCBalance } from "../utils/utils";
-
+import { User } from "../types/types";
 interface MyClientsViewProps {
   usernames: string[];
-  userMap: { [key: string]: string };
+  userMap: { [key: string]: User };
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
   handleAddUser: (username: string, walletAddress: string) => void;
@@ -44,32 +44,50 @@ const MyClientsView: React.FC<MyClientsViewProps> = ({
             </tr>
           </thead>
           <tbody className="bg-black divide-y divide-gray-700">
-            {usernames.map(username => {
-              const walletAddress = userMap[username];
-              const { data: balanceData, isLoading } = useReadContract(
-                balanceOf,
-                {
-                  contract,
-                  address: walletAddress
-                }
-              );
-              const displayBalance = isLoading
-                ? "Loading..."
-                : balanceData !== null && balanceData !== undefined
-                ? formatUSDCBalance(balanceData.toString())
-                : "N/A";
-              return (
-                <tr key={username}>
-                  <td className="py-2 px-4 border-b text-white">{username}</td>
-                  <td className="py-2 px-4 border-b text-gray-400">
-                    {walletAddress}
-                  </td>
-                  <td className="py-2 px-4 border-b text-gray-400  text-right">
-                    {displayBalance}
-                  </td>
-                </tr>
-              );
-            })}
+            {usernames.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={3}
+                  className="py-2 px-4 border-b text-center text-white"
+                >
+                  No clients have been added yet!
+                </td>
+              </tr>
+            ) : (
+              usernames.map(username => {
+                const walletAddress = userMap[username]?.walletAddress;
+                console.log("walletAddress", walletAddress);
+
+                const { data: balanceData, isLoading } = useReadContract(
+                  balanceOf,
+                  {
+                    contract,
+                    address: walletAddress || "" // Ensure address is not undefined
+                  }
+                );
+
+                const displayBalance = isLoading
+                  ? "Loading..."
+                  : balanceData !== null && balanceData !== undefined
+                  ? formatUSDCBalance(balanceData.toString())
+                  : "N/A";
+
+                return (
+                  <tr key={username}>
+                    <td className="py-2 px-4 border-b text-white">
+                      {username}
+                    </td>
+                    <td className="py-2 px-4 border-b text-gray-400">
+                      {walletAddress || "N/A"}{" "}
+                      {/* Handle possible undefined walletAddress */}
+                    </td>
+                    <td className="py-2 px-4 border-b text-gray-400 text-right">
+                      {displayBalance}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

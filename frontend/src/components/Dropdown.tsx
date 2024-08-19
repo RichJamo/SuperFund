@@ -18,13 +18,15 @@ const Dropdown: React.FC<DropdownProps> = ({
       className="bg-gray-800 text-white border border-gray-700 p-2 rounded"
     >
       <option value="" disabled>
-        Select a username
+        {usernames.length === 0 ? "No clients available" : "Select a username"}
       </option>
-      {usernames.map(username => (
-        <option key={username} value={username}>
-          {username}
-        </option>
-      ))}
+      {usernames.length > 0
+        ? usernames.map(username => (
+            <option key={username} value={username}>
+              {username}
+            </option>
+          ))
+        : null}
     </select>
   );
 };

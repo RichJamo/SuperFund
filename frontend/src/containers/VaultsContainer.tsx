@@ -8,13 +8,7 @@ import {
   fetchUserVaultBalance
 } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
-import {
-  Vault,
-  Rate,
-  FormattedVault,
-  UserData,
-  VaultData
-} from "../types/types";
+import { FormattedVault, UserMap, VaultData } from "../types/types";
 import { VAULT_IDS, USDC_CONTRACT_ADDRESS } from "../constants/index";
 import { Address, getContract } from "thirdweb";
 import { client } from "../utils/client";
@@ -33,7 +27,7 @@ const VaultsContainer = () => {
   const [transactionAmount, setTransactionAmount] = useState("");
   const [usernames, setUsernames] = useState<string[]>([]);
   const [selectedUsername, setSelectedUsername] = useState<string>("");
-  const [userMap, setUserMap] = useState<UserData>({});
+  const [userMap, setUserMap] = useState<UserMap>({});
   const [loading, setLoading] = useState<boolean>(true);
 
   const handleSuccess = (transactionResult: any) => {
@@ -52,26 +46,17 @@ const VaultsContainer = () => {
   }
   console.log("EOAaccount", EOAaccount);
 
-  const { data: usdcBalanceResult, isLoading, error } = useReadContract(
-    getBalance,
-    {
-      contract,
-      address: userMap[selectedUsername] || ""
-    }
-  );
-
-  const usdcBalance = isLoading
-    ? "Loading..."
-    : error
-    ? "Error"
-    : usdcBalanceResult?.displayValue || "N/A";
-
   const handleApproveTransaction = async () => {
+    if (!selectedUsername || !userMap[selectedUsername]?.walletAddress) {
+      console.error("No wallet address available for approval");
+      return;
+    }
+
     try {
       console.log("Approving...");
       const result = await handleApprove(
         EOAaccount,
-        userMap[selectedUsername] as Address
+        userMap[selectedUsername].walletAddress as Address
       );
       return result;
     } catch (error) {
@@ -80,6 +65,11 @@ const VaultsContainer = () => {
   };
 
   const handleDepositTransaction = async (vaultId: Address) => {
+    if (!selectedUsername || !userMap[selectedUsername]?.walletAddress) {
+      console.error("No wallet address available for approval");
+      return;
+    }
+
     try {
       console.log("Depositing to vault...");
       setTransactionAmount;
@@ -87,7 +77,7 @@ const VaultsContainer = () => {
         vaultId,
         EOAaccount,
         BigInt(transactionAmount),
-        userMap[selectedUsername] as Address
+        userMap[selectedUsername].walletAddress as Address
       );
       console.log(result);
       return result;
@@ -97,6 +87,11 @@ const VaultsContainer = () => {
   };
 
   const handleWithdrawTransaction = async (vaultId: Address) => {
+    if (!selectedUsername || !userMap[selectedUsername]?.walletAddress) {
+      console.error("No wallet address available for approval");
+      return;
+    }
+
     try {
       console.log("Withdrawing from vault...");
       setTransactionAmount;
@@ -104,7 +99,7 @@ const VaultsContainer = () => {
         vaultId,
         EOAaccount,
         BigInt(transactionAmount),
-        userMap[selectedUsername] as Address
+        userMap[selectedUsername].walletAddress as Address
       );
       console.log(result);
       return result;
@@ -160,15 +155,24 @@ const VaultsContainer = () => {
 
         setVaults(formattedVaults);
 
-        // Fetch and set user data if necessary
-        const userData: UserData = await fetchUsersData();
-        const resolvedUsernames = Object.keys(userData);
-        const resolvedUserMap = userData;
+        // Fetch all users
+        const allUsersData: UserMap = await fetchUsersData();
+        console.log("allUsersData: ", allUsersData);
 
-        setUsernames(resolvedUsernames);
-        setUserMap(resolvedUserMap);
-        if (resolvedUsernames.length > 0 && !selectedUsername) {
-          setSelectedUsername(resolvedUsernames[0]); // Set default user only if none is selected
+        // Filter users based on the connected manager's address
+        const filteredUserMap = Object.fromEntries(
+          Object.entries(allUsersData).filter(
+            ([username, user]) => user.managerAddress === EOAaccount.address
+          )
+        );
+        const filteredUsernames = Object.keys(filteredUserMap);
+
+        setUsernames(filteredUsernames);
+        setUserMap(filteredUserMap);
+        if (filteredUsernames.length > 0) {
+          setSelectedUsername(filteredUsernames[0]);
+        } else {
+          setSelectedUsername("");
         }
       } catch (error) {
         console.error("Error initializing data:", error);
@@ -179,6 +183,23 @@ const VaultsContainer = () => {
 
     init();
   }, []); // Run only on component mount
+  console.log("selectedUsername", selectedUsername);
+  const walletAddress = selectedUsername
+    ? userMap[selectedUsername]?.walletAddress
+    : "";
+  const { data: usdcBalanceResult, isLoading, error } = useReadContract(
+    getBalance,
+    {
+      contract,
+      address: walletAddress
+    }
+  );
+
+  const usdcBalance = isLoading
+    ? "Loading..."
+    : error
+    ? "Error"
+    : usdcBalanceResult?.displayValue || "N/A";
 
   useEffect(() => {
     async function updateUserVaultBalances() {
@@ -189,7 +210,7 @@ const VaultsContainer = () => {
       for (const vault of updatedVaults) {
         try {
           const balance = await fetchUserVaultBalance(
-            userMap[selectedUsername] as Address,
+            userMap[selectedUsername].walletAddress as Address,
             vault.id as Address
           );
           vault.userBalance = balance;

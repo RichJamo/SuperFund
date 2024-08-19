@@ -66,9 +66,14 @@ export interface FormattedVault {
   apy7d: string;
   userBalance: string;
 }
-export interface UserData {
-  [username: string]: string;
+// Define the shape of individual user data
+export interface User {
+  walletAddress: string;
+  managerAddress: string;
 }
+
+// Define a map where the key is a string and the value is a User
+export type UserMap = { [username: string]: User };
 
 export interface TransactionResult {
   readonly transactionHash: `0x${string}`;

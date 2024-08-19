@@ -1,12 +1,12 @@
 import { AAVE_OPTIMISM_SUBGRAPH_URL, OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
-import { UserData } from "../types/types";
+import { UserMap } from "../types/types";
 
-export const fetchUsersData = async (): Promise<UserData> => {
+export const fetchUsersData = async (): Promise<UserMap> => {
   try {
     const response = await fetch("http://localhost:4000/api/users");
     if (!response.ok) throw new Error("Failed to fetch users");
 
-    const data: UserData = await response.json();
+    const data: UserMap = await response.json();
     return data;
   } catch (error) {
     console.error("Error fetching users:", error);

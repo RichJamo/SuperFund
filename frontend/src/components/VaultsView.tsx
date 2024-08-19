@@ -33,6 +33,8 @@ const VaultsView: React.FC<VaultsViewProps> = ({
   onError,
   usdcBalance
 }) => {
+  const isClientSelected = selectedUsername !== "";
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-4 text-zinc-100">Selected Client</h2>
@@ -42,9 +44,11 @@ const VaultsView: React.FC<VaultsViewProps> = ({
           selectedUsername={selectedUsername}
           onSelect={setSelectedUsername}
         />
-        <span className="ml-4 text-zinc-100">
-          Free USDC Balance: ${usdcBalance}
-        </span>
+        {isClientSelected && (
+          <span className="ml-4 text-zinc-100">
+            Free USDC Balance: ${usdcBalance}
+          </span>
+        )}
       </div>
       {loading ? (
         <p>Loading...</p>
@@ -99,6 +103,12 @@ const VaultsView: React.FC<VaultsViewProps> = ({
                         }
                         onTransactionConfirmed={onTransactionConfirmed}
                         onError={onError}
+                        disabled={!isClientSelected}
+                        className={`${
+                          !isClientSelected
+                            ? "bg-gray-600 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
                         Deposit
                       </TransactionButton>
@@ -108,6 +118,12 @@ const VaultsView: React.FC<VaultsViewProps> = ({
                         }
                         onTransactionConfirmed={onTransactionConfirmed}
                         onError={onError}
+                        disabled={!isClientSelected}
+                        className={`${
+                          !isClientSelected
+                            ? "bg-gray-600 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
                         Withdraw
                       </TransactionButton>
@@ -119,17 +135,19 @@ const VaultsView: React.FC<VaultsViewProps> = ({
           </table>
         </div>
       )}
-      <div className="mt-4">
-        <h2 className="text-xl font-bold mb-4 text-zinc-100">
-          Amount to Deposit/Withdraw
-        </h2>
-        <input
-          type="number"
-          value={transactionAmount}
-          onChange={e => setTransactionAmount(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded mb-2"
-        />
-      </div>
+      {isClientSelected && (
+        <div className="mt-4">
+          <h2 className="text-xl font-bold mb-4 text-zinc-100">
+            Amount to Deposit/Withdraw
+          </h2>
+          <input
+            type="number"
+            value={transactionAmount}
+            onChange={e => setTransactionAmount(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded mb-2"
+          />
+        </div>
+      )}
     </div>
   );
 };
