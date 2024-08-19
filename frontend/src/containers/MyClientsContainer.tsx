@@ -4,31 +4,39 @@ import { fetchUsersData } from "../utils/api";
 import { useContractBalance } from "../hooks/hooks";
 import { UserData } from "../types/types";
 
+// Define a type for the user data map
+type UserMap = { [key: string]: string };
+
 function MyClientsContainer() {
   const [usernames, setUsernames] = useState<string[]>([]);
-  const [userMap, setUserMap] = useState<{ [key: string]: string }>({});
+  const [userMap, setUserMap] = useState<UserMap>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: balanceData, isLoading } = useContractBalance(userMap);
 
   useEffect(() => {
-    async function getUsers() {
-      const userData: UserData = await fetchUsersData();
-      const usersArray = Object.entries(userData).map(
-        ([username, address]) => ({
-          username,
-          address
-        })
-      );
+    const getUsers = async () => {
+      try {
+        const userData: UserData = await fetchUsersData();
+        const usersArray = Object.entries(userData).map(
+          ([username, address]) => ({
+            username,
+            address
+          })
+        );
 
-      setUsernames(usersArray.map(user => user.username));
-      setUserMap(
-        usersArray.reduce((map, user) => {
-          map[user.username] = user.address;
-          return map;
-        }, {} as { [key: string]: string })
-      );
-    }
+        setUsernames(usersArray.map(user => user.username));
+        setUserMap(
+          usersArray.reduce((map, user) => {
+            map[user.username] = user.address;
+            return map;
+          }, {} as UserMap)
+        );
+      } catch (error) {
+        console.error("Error fetching users data:", error);
+        // Optionally set an error state here
+      }
+    };
 
     getUsers();
   }, []);

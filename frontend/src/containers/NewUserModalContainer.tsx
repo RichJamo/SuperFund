@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useActiveAccount, useContractEvents } from "thirdweb/react";
 import NewUserModalView from "../components/NewUserModalView";
 import { useContractSetup, useCreateAccount } from "../hooks/hooks";
 import { getWalletAddressOnceCreated } from "../utils/utils";
-import { NewUserModalProps } from "../types/types";
+import { NewUserModalProps, TransactionResult } from "../types/types";
 
 const NewUserModalContainer: React.FC<NewUserModalProps> = ({
   isOpen,
@@ -15,6 +15,9 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
 
   const { contract, myEvent } = useContractSetup();
   const activeAccount = useActiveAccount();
+  if (!activeAccount) {
+    throw new Error("No active account found");
+  }
 
   const { createAccount, transactionResult } = useCreateAccount(
     contract,
@@ -27,8 +30,11 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
   });
   console.log("EventLog:", eventLog);
 
-  const prevTransactionRef = useRef<any | null>(null);
-  console.log(transactionResult);
+  const [
+    prevTransaction,
+    setPrevTransaction
+  ] = useState<TransactionResult | null>(null);
+  console.log(prevTransaction);
 
   const handleCreateAccount = async () => {
     try {
@@ -42,17 +48,24 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
     }
   };
 
+  const updatePrevTransaction = useCallback(
+    (newTransaction: TransactionResult | null) => {
+      setPrevTransaction(newTransaction);
+    },
+    []
+  );
+
   useEffect(() => {
     const walletAddress = getWalletAddressOnceCreated(
       eventLog,
       transactionResult,
-      prevTransactionRef
+      updatePrevTransaction
     );
     if (walletAddress) {
       onAddUser(username, walletAddress);
       onRequestClose();
     }
-  }, [eventLog, transactionResult]);
+  }, [eventLog, transactionResult, updatePrevTransaction]);
 
   return (
     <NewUserModalView

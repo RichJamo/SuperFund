@@ -1,10 +1,5 @@
-// utils.ts
-import { readContract, getContract } from "thirdweb";
-import { PERMIT2_CONTRACT_ADDRESS, SUPERFORM_ROUTER_ADDRESS, USDC_CONTRACT_ADDRESS } from "../constants";
-import { PermitSingle, Domain } from "../types/types";
-import { signTypedData } from "thirdweb/utils";
-import { client } from "./client"; 
-import { optimism } from "thirdweb/chains";
+import { ParseEventLogsResult } from "thirdweb";
+import { TransactionResult } from "../types/types"
 
 export const formatTotalAssets = (totalAssets: string, decimals: number): string => {
   const value = Number(totalAssets) // / Math.pow(10, decimals); - don't need to divide by decimals since the subgraph gives a dollar amount
@@ -16,9 +11,15 @@ export const formatTotalAssets = (totalAssets: string, decimals: number): string
   });
 };
 
-export const getWalletAddressOnceCreated = (eventLog, transactionResult, prevTransactionRef) => {
-  if (transactionResult && transactionResult !== prevTransactionRef.current) {
-    prevTransactionRef.current = transactionResult;
+export const getWalletAddressOnceCreated = (
+  eventLog: ParseEventLogsResult<any, boolean> | undefined,
+  transactionResult: TransactionResult | undefined,
+  updatePrevTransaction: (transaction: TransactionResult | null) => void
+): string | null => {
+  if (transactionResult) {
+    // Call the callback to update the previous transaction
+    updatePrevTransaction(transactionResult);
+    
     if (eventLog && eventLog.length > 0) {
       const latestEvent = eventLog[eventLog.length - 1];
       if (latestEvent && latestEvent.topics[1]) {
@@ -28,6 +29,7 @@ export const getWalletAddressOnceCreated = (eventLog, transactionResult, prevTra
   }
   return null;
 };
+
 
 export function formatAddress(rawAddress: string): string {
   // Ensure the address starts with '0x'
@@ -39,56 +41,4 @@ export function formatAddress(rawAddress: string): string {
   const formattedAddress = "0x" + rawAddress.slice(-40);
 
   return formattedAddress;
-}
-
-export async function getNextNonce(userAddress: string): Promise<number> {
-  const contract = getContract({
-    client,
-    chain: optimism,
-    address: PERMIT2_CONTRACT_ADDRESS
-  });
-  console.log("got here 3");
-
-  // Assuming readContract returns a tuple [bigint, number, number]
-  const [allowance, expiration, nonce] = await readContract({
-    contract: contract,
-    method: 'function allowance(address owner, address token, address spender) view returns (uint160 amount, uint48 expiration, uint48 nonce)',
-    params: [userAddress, USDC_CONTRACT_ADDRESS, SUPERFORM_ROUTER_ADDRESS],
-  });
-
-  let next_nonce = Number(nonce) + 1;
-
-  return next_nonce;
-}
-
-export async function signPermitData(permitSingle: PermitSingle, chainId): Promise<string> {
-  const domain: Domain = {
-    name: 'Permit2',
-    version: '1',
-    chainId: chainId,
-    verifyingContract: PERMIT2_CONTRACT_ADDRESS,
-  };
-
-  const types = {
-    PermitSingle: [
-      { name: 'details', type: 'PermitDetails' },
-      { name: 'spender', type: 'address' },
-      { name: 'sigDeadline', type: 'uint256' },
-    ],
-    PermitDetails: [
-      { name: 'token', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-      { name: 'expiration', type: 'uint256' },
-      { name: 'nonce', type: 'uint256' },
-    ],
-  };
-
-  const value = {
-    details: permitSingle.details,
-    spender: permitSingle.spender,
-    sigDeadline: permitSingle.sigDeadline,
-  };
-
-  const signature = signTypedData(domain, types, value);
-  return signature;
 }

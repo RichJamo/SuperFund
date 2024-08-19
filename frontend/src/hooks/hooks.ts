@@ -1,8 +1,10 @@
 import { useReadContract, useSendTransaction } from "thirdweb/react";
-import { createThirdwebClient, getContract, prepareEvent, prepareContractCall } from "thirdweb";
+import { createThirdwebClient, getContract, prepareEvent, prepareContractCall, PrepareContractCallOptions, PreparedTransaction } from "thirdweb";
 import { optimism } from "thirdweb/chains";
 import { DEFAULT_ACCOUNT_FACTORY } from "../constants/index";
 import { stringToBytes32 } from "../utils/stringToBytes32";
+import { sendTransaction } from "thirdweb";
+import { Account } from "thirdweb/wallets";
 
 const clientId = import.meta.env.VITE_TEMPLATE_CLIENT_ID as string;
 
@@ -41,8 +43,9 @@ export function useContractBalance(userMap: { [key: string]: string }) {
     params: [walletAddress || ""],
     queryOptions: { enabled: !!walletAddress }
   });
-  if (!data) return { data: null };
-  return { data, isLoading };
+  const formattedData: bigint | null = data ? BigInt(data[0] as bigint) : null;
+
+  return { data: formattedData, isLoading };
 }
 
 export const useContractSetup = () => {
@@ -61,7 +64,7 @@ export const useContractSetup = () => {
 };
 
 
-export const useCreateAccount = (contract: any, activeAccount: any) => {
+export  const  useCreateAccount  = (contract: any, activeAccount: Account)  => {
   const { mutate: sendTx, data: transactionResult } = useSendTransaction();
 
   const createAccount = (username: string) => {
@@ -69,7 +72,7 @@ export const useCreateAccount = (contract: any, activeAccount: any) => {
     console.log(username)
     console.log(activeAccount.address)
     console.log(contract)
-    const createAccountTx = prepareContractCall({
+    const createAccountTx: PreparedTransaction = prepareContractCall({
       contract,
       method: "function createAccount(address _admin, bytes calldata _data)",
       params: [activeAccount.address, stringToBytes32(username)]

@@ -1,4 +1,5 @@
-// types.ts
+import { ThirdwebClient } from "thirdweb";
+import { ChainOptions } from "thirdweb/chains";
 export interface Vault {
   id: string;
   chain: string;
@@ -69,3 +70,9 @@ export interface UserData {
   [username: string]: string;
 }
 
+export interface TransactionResult {
+  readonly transactionHash: `0x${string}`;
+  client: ThirdwebClient;
+  chain: Readonly<ChainOptions & { rpc: string }>;
+  maxBlocksWaitTime?: number;
+}
