@@ -10,5 +10,9 @@
   "Susan Donald": {
     "walletAddress": "0x5d100af3bcd303f91df5e4954fedee282e982934",
     "managerAddress": "0xAB75E66C63307396FE8456Ea7c42CBBF3CF36298"
+  },
+  "Donald Trump": {
+    "walletAddress": "0x8e53385c8d749ecaa32af60dcb10956902fded21",
+    "managerAddress": "0xAB75E66C63307396FE8456Ea7c42CBBF3CF36298"
   }
 }

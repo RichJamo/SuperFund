@@ -136,7 +136,7 @@ const VaultsView: React.FC<VaultsViewProps> = ({
             type="number"
             value={transactionAmount}
             onChange={e => setTransactionAmount(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded mb-2"
+            className="px-4 py-2 border border-gray-00 rounded mb-2 text-gray-900"
           />
         </div>
       )}

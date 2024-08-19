@@ -1,12 +1,5 @@
 import React from "react";
 import NewUserModalContainer from "../containers/NewUserModalContainer";
-import { useReadContract } from "thirdweb/react";
-import { balanceOf } from "thirdweb/extensions/erc20";
-import { getContract } from "thirdweb";
-import { USDC_CONTRACT_ADDRESS } from "../constants";
-import { client } from "../utils/client";
-import { optimism } from "thirdweb/chains";
-import { formatUSDCBalance } from "../utils/utils";
 import { User } from "../types/types";
 interface MyClientsViewProps {
   usernames: string[];
@@ -14,20 +7,16 @@ interface MyClientsViewProps {
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
   handleAddUser: (username: string, walletAddress: string) => void;
+  balances: { [key: string]: string };
 }
-
-const contract = getContract({
-  client,
-  chain: optimism,
-  address: USDC_CONTRACT_ADDRESS
-});
 
 const MyClientsView: React.FC<MyClientsViewProps> = ({
   usernames,
   userMap,
   isModalOpen,
   setIsModalOpen,
-  handleAddUser
+  handleAddUser,
+  balances
 }) => {
   return (
     <>
@@ -56,20 +45,7 @@ const MyClientsView: React.FC<MyClientsViewProps> = ({
             ) : (
               usernames.map(username => {
                 const walletAddress = userMap[username]?.walletAddress;
-
-                const { data: balanceData, isLoading } = useReadContract(
-                  balanceOf,
-                  {
-                    contract,
-                    address: walletAddress || "" // Ensure address is not undefined
-                  }
-                );
-
-                const displayBalance = isLoading
-                  ? "Loading..."
-                  : balanceData !== null && balanceData !== undefined
-                  ? formatUSDCBalance(balanceData.toString())
-                  : "N/A";
+                const displayBalance = balances[username] || "N/A";
 
                 return (
                   <tr key={username}>
