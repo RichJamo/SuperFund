@@ -53,7 +53,6 @@ export const fetchVaultData = async (vaultIds: string[]): Promise<any> => {
     }
 
     const result = data.data.markets;
-    console.log(result); // This will print the details of the markets
     return result;
 
   } catch (error) {

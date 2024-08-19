@@ -28,13 +28,11 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
     contract,
     events: [myEvent]
   });
-  console.log("EventLog:", eventLog);
 
   const [
     prevTransaction,
     setPrevTransaction
   ] = useState<TransactionResult | null>(null);
-  console.log(prevTransaction);
 
   const handleCreateAccount = async () => {
     try {

@@ -12,7 +12,6 @@ app.use(cors());
 
 app.use(bodyParser.json());
 
-// Get all usernames
 app.get('/api/users', (req, res) => {
   fs.readFile(dataFilePath, (err, data) => {
     if (err) return res.status(500).send('Error reading data file.');
@@ -20,10 +19,8 @@ app.get('/api/users', (req, res) => {
   });
 });
 
-// Add a new user
 app.post('/api/users', (req, res) => {
   const { username, address } = req.body;
-  console.log('Received data:', req.body); // Log the request body
 
   if (!username || !address) {
     return res.status(400).send('Username and address are required.');

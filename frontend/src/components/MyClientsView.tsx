@@ -56,7 +56,6 @@ const MyClientsView: React.FC<MyClientsViewProps> = ({
             ) : (
               usernames.map(username => {
                 const walletAddress = userMap[username]?.walletAddress;
-                console.log("walletAddress", walletAddress);
 
                 const { data: balanceData, isLoading } = useReadContract(
                   balanceOf,

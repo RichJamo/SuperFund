@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { fetchUsersData, fetchVaultData } from "../utils/api";
 import { formatTotalAssets } from "../utils/utils";
 import {
-  handleApprove,
-  handleDeposit,
-  handleWithdrawal,
+  executeDeposit,
+  executeWithdrawal,
   fetchUserVaultBalance
 } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
@@ -32,16 +31,6 @@ const VaultsContainer = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeAccount, setActiveAccount] = useState<Account | null>(null);
 
-  const handleSuccess = (transactionResult: any) => {
-    console.log("Transaction successful:", transactionResult);
-    // Handle success logic here
-  };
-
-  const handleError = (error: Error) => {
-    console.error("Transaction error:", error);
-    // Handle error logic here
-  };
-
   const EOAaccount = useActiveAccount();
   useEffect(() => {
     if (EOAaccount) {
@@ -53,43 +42,42 @@ const VaultsContainer = () => {
   if (!EOAaccount) {
     throw new Error("No active account found");
   }
-  console.log("EOAaccount", EOAaccount);
 
-  const handleApproveTransaction = async () => {
-    if (!selectedUsername || !userMap[selectedUsername]?.walletAddress) {
-      console.error("No wallet address available for approval");
-      return;
-    }
+  async function updateUserVaultBalances() {
+    if (!selectedUsername || !userMap[selectedUsername]) return;
 
-    try {
-      console.log("Approving...");
-      const result = await handleApprove(
-        EOAaccount,
-        userMap[selectedUsername].walletAddress as Address
-      );
-      return result;
-    } catch (error) {
-      throw new Error("Transaction failed");
+    const updatedVaults = [...vaults];
+
+    for (const vault of updatedVaults) {
+      try {
+        const balance = await fetchUserVaultBalance(
+          userMap[selectedUsername].walletAddress as Address,
+          vault.id as Address
+        );
+        vault.userBalance = balance;
+      } catch (error) {
+        console.error(`Error fetching balance for vault ${vault.id}:`, error);
+        vault.userBalance = "Error";
+      }
     }
-  };
+    setVaults(updatedVaults);
+  }
 
   const handleDepositTransaction = async (vaultId: Address) => {
     if (!selectedUsername || !userMap[selectedUsername]?.walletAddress) {
       console.error("No wallet address available for approval");
       return;
     }
-
     try {
-      console.log("Depositing to vault...");
       setTransactionAmount;
-      const result = await handleDeposit(
+      await executeDeposit(
         vaultId,
         EOAaccount,
         BigInt(transactionAmount),
         userMap[selectedUsername].walletAddress as Address
       );
-      console.log(result);
-      return result;
+      refetch();
+      updateUserVaultBalances();
     } catch (error) {
       throw new Error("Transaction failed");
     }
@@ -102,16 +90,15 @@ const VaultsContainer = () => {
     }
 
     try {
-      console.log("Withdrawing from vault...");
       setTransactionAmount;
-      const result = await handleWithdrawal(
+      await executeWithdrawal(
         vaultId,
         EOAaccount,
         BigInt(transactionAmount),
         userMap[selectedUsername].walletAddress as Address
       );
-      console.log(result);
-      return result;
+      refetch();
+      updateUserVaultBalances();
     } catch (error) {
       throw new Error("Transaction failed");
     }
@@ -122,7 +109,6 @@ const VaultsContainer = () => {
       try {
         const data: VaultData[] = await fetchVaultData(VAULT_IDS);
 
-        // Assuming data is an array of objects with the new structure
         const formattedVaults: FormattedVault[] = data.map(vaultData => {
           const {
             id,
@@ -132,7 +118,6 @@ const VaultsContainer = () => {
             totalValueLockedUSD
           } = vaultData;
 
-          // Find specific rate types within the rates array
           const lenderVariableRate = rates.find(
             rate => rate.type === "VARIABLE" && rate.id.startsWith("LENDER")
           );
@@ -144,8 +129,8 @@ const VaultsContainer = () => {
             id,
             name: name || "Unnamed Vault",
             symbol: inputToken.symbol || "N/A",
-            chain: "Optimism", // Adjust if needed
-            protocol: "Aave", // Assuming the protocol is Aave based on the context
+            chain: "Optimism",
+            protocol: "Aave",
             totalAssets: totalValueLockedUSD
               ? formatTotalAssets(totalValueLockedUSD, inputToken.decimals)
               : "N/A",
@@ -158,17 +143,17 @@ const VaultsContainer = () => {
             apy7d: lenderVariableRate
               ? `${parseFloat(lenderVariableRate.rate).toFixed(2)}%`
               : "N/A",
-            userBalance: "N/A" // Placeholder until you fetch actual user balances
+            userBalance: "N/A"
           };
         });
 
         setVaults(formattedVaults);
 
-        // Fetch all users
         const allUsersData: UserMap = await fetchUsersData();
-        console.log("allUsersData: ", allUsersData);
 
-        // Filter users based on the connected manager's address
+        if (!EOAaccount) {
+          throw new Error("No active account found");
+        }
         const filteredUserMap = Object.fromEntries(
           Object.entries(allUsersData).filter(
             ([username, user]) => user.managerAddress === EOAaccount.address
@@ -192,19 +177,20 @@ const VaultsContainer = () => {
     if (activeAccount) {
       init();
     }
-  }, [activeAccount]); // Run only on component mount
+  }, [activeAccount]);
 
-  console.log("selectedUsername", selectedUsername);
   const walletAddress = selectedUsername
     ? userMap[selectedUsername]?.walletAddress
     : "";
-  const { data: usdcBalanceResult, isLoading, error } = useReadContract(
-    getBalance,
-    {
-      contract,
-      address: walletAddress
-    }
-  );
+  const {
+    data: usdcBalanceResult,
+    isLoading,
+    error,
+    refetch
+  } = useReadContract(getBalance, {
+    contract,
+    address: walletAddress
+  });
 
   const usdcBalance = isLoading
     ? "Loading..."
@@ -213,27 +199,8 @@ const VaultsContainer = () => {
     : usdcBalanceResult?.displayValue || "N/A";
 
   useEffect(() => {
-    async function updateUserVaultBalances() {
-      if (!selectedUsername || !userMap[selectedUsername]) return;
-
-      const updatedVaults = [...vaults];
-
-      for (const vault of updatedVaults) {
-        try {
-          const balance = await fetchUserVaultBalance(
-            userMap[selectedUsername].walletAddress as Address,
-            vault.id as Address
-          );
-          vault.userBalance = balance;
-        } catch (error) {
-          console.error(`Error fetching balance for vault ${vault.id}:`, error);
-          vault.userBalance = "Error";
-        }
-      }
-      setVaults(updatedVaults);
-    }
     updateUserVaultBalances();
-  }, [selectedUsername, userMap]); // Run whenever selectedUsername or userMap changes
+  }, [selectedUsername, userMap]);
 
   const handleUserChange = (username: string) => {
     setSelectedUsername(username);
@@ -250,8 +217,6 @@ const VaultsContainer = () => {
       setSelectedUsername={setSelectedUsername}
       depositTransaction={handleDepositTransaction}
       withdrawTransaction={handleWithdrawTransaction}
-      onTransactionConfirmed={handleSuccess}
-      onError={handleError}
       usdcBalance={usdcBalance}
     />
   );

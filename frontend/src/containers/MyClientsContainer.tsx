@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import MyClientsView from "../components/MyClientsView";
 import { fetchUsersData } from "../utils/api";
-import { User, UserMap } from "../types/types";
+import { UserMap } from "../types/types";
 import { useActiveAccount } from "thirdweb/react";
 
 function MyClientsContainer() {

@@ -14,8 +14,6 @@ interface VaultsViewProps {
   setSelectedUsername: (value: string) => void;
   depositTransaction: (value: Address) => Promise<any>;
   withdrawTransaction: (value: Address) => Promise<any>;
-  onTransactionConfirmed: (result: any) => void;
-  onError: (error: Error) => void;
   usdcBalance: string;
 }
 
@@ -29,8 +27,6 @@ const VaultsView: React.FC<VaultsViewProps> = ({
   setSelectedUsername,
   depositTransaction,
   withdrawTransaction,
-  onTransactionConfirmed,
-  onError,
   usdcBalance
 }) => {
   const isClientSelected = selectedUsername !== "";
@@ -101,8 +97,6 @@ const VaultsView: React.FC<VaultsViewProps> = ({
                         transaction={() =>
                           depositTransaction(vault.id as Address)
                         }
-                        onTransactionConfirmed={onTransactionConfirmed}
-                        onError={onError}
                         disabled={!isClientSelected}
                         className={`${
                           !isClientSelected
@@ -116,8 +110,6 @@ const VaultsView: React.FC<VaultsViewProps> = ({
                         transaction={() =>
                           withdrawTransaction(vault.id as Address)
                         }
-                        onTransactionConfirmed={onTransactionConfirmed}
-                        onError={onError}
                         disabled={!isClientSelected}
                         className={`${
                           !isClientSelected

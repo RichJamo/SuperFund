@@ -7,28 +7,17 @@ export interface Vault {
   name: string;
   totalAssets: string;
   apy7d: string;
-  userBalance?: string; // Add userBalance field for optional data
+  userBalance?: string;
 }
 
 export interface NewUserModalProps {
   isOpen: boolean;
   onRequestClose: () => void;
   onAddUser: (username: string, walletAddress: string) => void;
-  username?: string; // Optional if you want to pass the username directly to the view
-  isLoading?: boolean; // Optional if you want to pass the loading state to the view
-  onChangeUsername?: (username: string) => void; // Optional if you want to pass the handler to update the username
-  onCreateAccount?: () => void; // Optional if you want to pass the handler to create the account
-}
-
-export interface PermitSingle {
-  details: {
-    token: string;
-    amount: string;
-    expiration: number;
-    nonce: number;
-  };
-  spender: string;
-  sigDeadline: number;
+  username?: string; 
+  isLoading?: boolean;
+  onChangeUsername?: (username: string) => void; 
+  onCreateAccount?: () => void; 
 }
 
 export interface Domain {
@@ -66,13 +55,11 @@ export interface FormattedVault {
   apy7d: string;
   userBalance: string;
 }
-// Define the shape of individual user data
 export interface User {
   walletAddress: string;
   managerAddress: string;
 }
 
-// Define a map where the key is a string and the value is a User
 export type UserMap = { [username: string]: User };
 
 export interface TransactionResult {

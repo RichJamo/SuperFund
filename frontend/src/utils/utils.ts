@@ -27,7 +27,6 @@ export const getWalletAddressOnceCreated = (
   updatePrevTransaction: (transaction: TransactionResult | null) => void
 ): string | null => {
   if (transactionResult) {
-    // Call the callback to update the previous transaction
     updatePrevTransaction(transactionResult);
     
     if (eventLog && eventLog.length > 0) {
@@ -42,12 +41,10 @@ export const getWalletAddressOnceCreated = (
 
 
 export function formatAddress(rawAddress: string): string {
-  // Ensure the address starts with '0x'
   if (!rawAddress.startsWith("0x")) {
     rawAddress = "0x" + rawAddress;
   }
 
-  // Remove leading zeros from the address
   const formattedAddress = "0x" + rawAddress.slice(-40);
 
   return formattedAddress;
