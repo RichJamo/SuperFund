@@ -11,6 +11,16 @@ export const formatTotalAssets = (totalAssets: string, decimals: number): string
   });
 };
 
+export const formatUSDCBalance = (usdcBalance: string): string => {
+  const value = Number(usdcBalance) / Math.pow(10, 6);
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 export const getWalletAddressOnceCreated = (
   eventLog: ParseEventLogsResult<any, boolean> | undefined,
   transactionResult: TransactionResult | undefined,

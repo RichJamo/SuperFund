@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import MyClientsView from "../components/MyClientsView";
 import { fetchUsersData } from "../utils/api";
-import { getUSDCBalance } from "../hooks/hooks";
 import { UserData } from "../types/types";
 
 // Define a type for the user data map
@@ -11,8 +10,6 @@ function MyClientsContainer() {
   const [usernames, setUsernames] = useState<string[]>([]);
   const [userMap, setUserMap] = useState<UserMap>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const { data: balanceData, isLoading } = getUSDCBalance(userMap);
 
   useEffect(() => {
     const getUsers = async () => {
@@ -68,8 +65,6 @@ function MyClientsContainer() {
     <MyClientsView
       usernames={usernames}
       userMap={userMap}
-      balanceData={balanceData}
-      isLoading={isLoading}
       isModalOpen={isModalOpen}
       setIsModalOpen={setIsModalOpen}
       handleAddUser={handleAddUser}
