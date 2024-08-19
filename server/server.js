@@ -20,17 +20,17 @@ app.get('/api/users', (req, res) => {
 });
 
 app.post('/api/users', (req, res) => {
-  const { username, address } = req.body;
+  const { username, walletAddress, managerAddress } = req.body;
 
-  if (!username || !address) {
-    return res.status(400).send('Username and address are required.');
+  if (!username || !walletAddress) {
+    return res.status(400).send('Username and walletAddress are required.');
   }
 
   fs.readFile(dataFilePath, (err, data) => {
     if (err) return res.status(500).send('Error reading data file.');
 
     const users = JSON.parse(data);
-    users[username] = address;
+    users[username] = { walletAddress, managerAddress };
 
     fs.writeFile(dataFilePath, JSON.stringify(users, null, 2), err => {
       if (err) return res.status(500).send('Error writing to data file.');
