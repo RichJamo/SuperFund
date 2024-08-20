@@ -10,10 +10,7 @@
     },
     {
       "src": "server/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "distDir": "server/dist"
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
