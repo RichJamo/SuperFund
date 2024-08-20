@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import MyClientsView from "../components/MyClientsView";
-import { fetchUsersData } from "../utils/api";
+import { fetchUsersData, addNewUserData } from "../utils/api";
 import { UserMap } from "../types/types";
 import { useActiveAccount } from "thirdweb/react";
 import { getContract } from "thirdweb";
@@ -76,22 +76,7 @@ function MyClientsContainer() {
   const handleAddUser = async (username: string, walletAddress: string) => {
     try {
       const managerAddress = activeAccount?.address;
-
-      const response = await fetch("http://localhost:4000/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          username,
-          walletAddress,
-          managerAddress
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add user");
-      }
+      await addNewUserData(username, walletAddress, managerAddress);
 
       setUsernames(prev => [...prev, username]);
       setUserMap(prev => ({

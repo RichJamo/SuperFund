@@ -1,9 +1,9 @@
-import { AAVE_OPTIMISM_SUBGRAPH_URL, OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
+import { AAVE_OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
 import { UserMap } from "../types/types";
 
 export const fetchUsersData = async (): Promise<UserMap> => {
   try {
-    const response = await fetch("http://localhost:4000/api/users");
+    const response = await fetch(import.meta.env.VITE_API_URL as string);
     if (!response.ok) throw new Error("Failed to fetch users");
 
     const data: UserMap = await response.json();
@@ -13,6 +13,24 @@ export const fetchUsersData = async (): Promise<UserMap> => {
     throw error;
   }
 };
+
+export const addNewUserData = async (username: string, walletAddress: string, managerAddress: string): Promise<void> => {
+  const response = await fetch(import.meta.env.VITE_API_URL as string, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      username,
+      walletAddress,
+      managerAddress
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to add user");
+  }
+}
 
 export const fetchVaultData = async (vaultIds: string[]): Promise<any> => {
   const vaultIdsString = vaultIds.map(id => `"${id.toLowerCase()}"`).join(",");
