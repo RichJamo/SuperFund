@@ -12,6 +12,11 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
 }) => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [
+    prevTransaction,
+    setPrevTransaction
+  ] = useState<TransactionResult | null>(null);
 
   const { contract, myEvent } = useContractSetup();
   const activeAccount = useActiveAccount();
@@ -28,11 +33,6 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
     contract,
     events: [myEvent]
   });
-
-  const [
-    prevTransaction,
-    setPrevTransaction
-  ] = useState<TransactionResult | null>(null);
 
   const handleCreateAccount = async () => {
     try {
@@ -54,16 +54,24 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
   );
 
   useEffect(() => {
-    const walletAddress = getWalletAddressOnceCreated(
+    const address = getWalletAddressOnceCreated(
       eventLog,
       transactionResult,
       updatePrevTransaction
     );
+    if (address) {
+      console.log("1st effect for creating wallet address");
+      setWalletAddress(address);
+    }
+  }, [eventLog, transactionResult, updatePrevTransaction, walletAddress]);
+
+  useEffect(() => {
     if (walletAddress) {
+      console.log("2nd effect for creating wallet address");
       onAddUser(username, walletAddress);
       onRequestClose();
     }
-  }, [eventLog, transactionResult, updatePrevTransaction]);
+  }, [walletAddress]);
 
   return (
     <NewUserModalView

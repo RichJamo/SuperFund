@@ -1,12 +1,13 @@
 import { AAVE_OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
 import { UserMap } from "../types/types";
 
-export const fetchUsersData = async (): Promise<UserMap> => {
+export const fetchUsersData = async () => {
   try {
-    const response = await fetch(import.meta.env.VITE_API_URL as string);
-    if (!response.ok) throw new Error("Failed to fetch users");
-
-    const data: UserMap = await response.json();
+    const response = await fetch('http://localhost:5000/api/users'); // Adjust URL based on your backend server
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
     return data;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -14,23 +15,26 @@ export const fetchUsersData = async (): Promise<UserMap> => {
   }
 };
 
-export const addNewUserData = async (username: string, walletAddress: string, managerAddress: string): Promise<void> => {
-  const response = await fetch(import.meta.env.VITE_API_URL as string, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      username,
-      walletAddress,
-      managerAddress
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to add user");
+export const addNewUserData = async (username: string, walletAddress: string, managerAddress: string ) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, walletAddress, managerAddress }),
+    });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+  } catch (error) {
+    console.error("Error adding new user:", error);
+    throw error;
   }
-}
+};
+
+
+
 
 export const fetchVaultData = async (vaultIds: string[]): Promise<any> => {
   const vaultIdsString = vaultIds.map(id => `"${id.toLowerCase()}"`).join(",");
