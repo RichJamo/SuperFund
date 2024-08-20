@@ -14,5 +14,9 @@
   "Donald Trump": {
     "walletAddress": "0x8e53385c8d749ecaa32af60dcb10956902fded21",
     "managerAddress": "0xAB75E66C63307396FE8456Ea7c42CBBF3CF36298"
+  },
+  "Daffy Duck": {
+    "walletAddress": "0x7d010d9c817ce2b882a5ee2e967f8a30e5af3c34",
+    "managerAddress": "0xf9B0404C82f148B17032511110474d59Ab612bFb"
   }
 }
