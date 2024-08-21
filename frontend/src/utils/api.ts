@@ -1,9 +1,11 @@
 import { AAVE_OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
 import { UserMap } from "../types/types";
 
+const API_URL = import.meta.env.VITE_API_URL as string;
+
 export const fetchUsersData = async (): Promise<UserMap> => {
   try {
-    const response = await fetch('http://localhost:5001/api/users'); // Adjust URL based on your backend server
+    const response = await fetch(API_URL); // Adjust URL based on your backend server
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -28,7 +30,7 @@ export const fetchUsersData = async (): Promise<UserMap> => {
 
 export const addNewUserData = async (username: string, walletAddress: string, managerAddress: string ) => {
   try {
-    const response = await fetch('http://localhost:5001/api/users', {
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
