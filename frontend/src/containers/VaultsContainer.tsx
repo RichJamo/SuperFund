@@ -4,7 +4,7 @@ import { formatTotalAssets } from "../utils/utils";
 import {
   executeDeposit,
   executeWithdrawal,
-  fetchUserVaultBalance
+  fetchUserVaultBalance,
 } from "../actions/actions";
 import VaultsView from "../components/VaultsView";
 import { FormattedVault, UserMap, VaultData } from "../types/types";
@@ -19,7 +19,7 @@ import { Account } from "thirdweb/wallets";
 const contract = getContract({
   client,
   chain: optimism,
-  address: USDC_CONTRACT_ADDRESS
+  address: USDC_CONTRACT_ADDRESS,
 });
 
 const VaultsContainer = () => {
@@ -109,20 +109,15 @@ const VaultsContainer = () => {
       try {
         const data: VaultData[] = await fetchVaultData(VAULT_IDS);
 
-        const formattedVaults: FormattedVault[] = data.map(vaultData => {
-          const {
-            id,
-            inputToken,
-            name,
-            rates,
-            totalValueLockedUSD
-          } = vaultData;
+        const formattedVaults: FormattedVault[] = data.map((vaultData) => {
+          const { id, inputToken, name, rates, totalValueLockedUSD } =
+            vaultData;
 
           const lenderVariableRate = rates.find(
-            rate => rate.type === "VARIABLE" && rate.id.startsWith("LENDER")
+            (rate) => rate.type === "VARIABLE" && rate.id.startsWith("LENDER")
           );
           const borrowerVariableRate = rates.find(
-            rate => rate.type === "VARIABLE" && rate.id.startsWith("BORROWER")
+            (rate) => rate.type === "VARIABLE" && rate.id.startsWith("BORROWER")
           );
 
           return {
@@ -143,24 +138,25 @@ const VaultsContainer = () => {
             apy7d: lenderVariableRate
               ? `${parseFloat(lenderVariableRate.rate).toFixed(2)}%`
               : "N/A",
-            userBalance: "N/A"
+            userBalance: "N/A",
           };
         });
 
         setVaults(formattedVaults);
 
         const allUsersData: UserMap = await fetchUsersData();
-
+        console.log(allUsersData);
         if (!EOAaccount) {
           throw new Error("No active account found");
         }
+        console.log(EOAaccount.address);
         const filteredUserMap = Object.fromEntries(
           Object.entries(allUsersData).filter(
             ([username, user]) => user.managerAddress === EOAaccount.address
           )
         );
         const filteredUsernames = Object.keys(filteredUserMap);
-
+        console.log(filteredUsernames);
         setUsernames(filteredUsernames);
         setUserMap(filteredUserMap);
         if (filteredUsernames.length > 0) {
@@ -186,10 +182,10 @@ const VaultsContainer = () => {
     data: usdcBalanceResult,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useReadContract(getBalance, {
     contract,
-    address: walletAddress
+    address: walletAddress,
   });
 
   const usdcBalance = isLoading

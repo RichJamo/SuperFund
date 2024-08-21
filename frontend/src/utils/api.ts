@@ -1,14 +1,25 @@
 import { AAVE_OPTIMISM_SUBGRAPH_URL } from "../constants/urls";
 import { UserMap } from "../types/types";
 
-export const fetchUsersData = async () => {
+export const fetchUsersData = async (): Promise<UserMap> => {
   try {
-    const response = await fetch('http://localhost:5000/api/users'); // Adjust URL based on your backend server
+    const response = await fetch('http://localhost:5001/api/users'); // Adjust URL based on your backend server
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
+
     const data = await response.json();
-    return data;
+    
+    // Transform the userData into userMap format
+    const userMap: UserMap = {};
+    data.forEach((user: any) => {
+      userMap[user.username] = {
+        walletAddress: user.wallet_address,
+        managerAddress: user.manager_address,
+      };
+    });
+
+    return userMap;
   } catch (error) {
     console.error("Error fetching users:", error);
     throw error;
@@ -17,7 +28,7 @@ export const fetchUsersData = async () => {
 
 export const addNewUserData = async (username: string, walletAddress: string, managerAddress: string ) => {
   try {
-    const response = await fetch('http://localhost:5000/api/users', {
+    const response = await fetch('http://localhost:5001/api/users', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
