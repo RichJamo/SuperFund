@@ -56,7 +56,7 @@ export function App() {
                 client={client}
                 appMetadata={{
                   name: "Example app",
-                  url: "https://example.com"
+                  url: "https://example.com",
                 }}
               />
             </div>
@@ -71,7 +71,7 @@ export function App() {
               client={client}
               appMetadata={{
                 name: "Example app",
-                url: "https://example.com"
+                url: "https://example.com",
               }}
             />
           )}
@@ -88,9 +88,11 @@ function Header() {
         src={superfundLogo}
         alt=""
         className="size-[150px] md:size-[150px]"
-        style={{
-          filter: "drop-shadow(0px 0px 24px #a726a9a8)"
-        }}
+        style={
+          {
+            // filter: "drop-shadow(0px 0px 24px #a726a9a8)"
+          }
+        }
       />
 
       <h1 className="text-2xl md:text-6xl font-bold tracking-tighter mb-6 text-zinc-100">
