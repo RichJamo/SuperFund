@@ -8,15 +8,13 @@ import { NewUserModalProps, TransactionResult } from "../types/types";
 const NewUserModalContainer: React.FC<NewUserModalProps> = ({
   isOpen,
   onRequestClose,
-  onAddUser
+  onAddUser,
 }) => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [
-    prevTransaction,
-    setPrevTransaction
-  ] = useState<TransactionResult | null>(null);
+  const [prevTransaction, setPrevTransaction] =
+    useState<TransactionResult | null>(null);
 
   const { contract, myEvent } = useContractSetup();
   const activeAccount = useActiveAccount();
@@ -31,7 +29,7 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
 
   const { data: eventLog } = useContractEvents({
     contract,
-    events: [myEvent]
+    events: [myEvent],
   });
 
   const handleCreateAccount = async () => {
@@ -57,6 +55,7 @@ const NewUserModalContainer: React.FC<NewUserModalProps> = ({
     const address = getWalletAddressOnceCreated(
       eventLog,
       transactionResult,
+      prevTransaction,
       updatePrevTransaction
     );
     if (address) {

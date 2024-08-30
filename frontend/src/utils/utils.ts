@@ -24,11 +24,12 @@ export const formatUSDCBalance = (usdcBalance: string): string => {
 export const getWalletAddressOnceCreated = (
   eventLog: ParseEventLogsResult<any, boolean> | undefined,
   transactionResult: TransactionResult | undefined,
+  prevTransaction: TransactionResult | null,
   updatePrevTransaction: (transaction: TransactionResult | null) => void
 ): string | null => {
-  if (transactionResult) {
+  if (transactionResult && transactionResult !== prevTransaction) {
+    console.log(transactionResult);
     updatePrevTransaction(transactionResult);
-    
     if (eventLog && eventLog.length > 0) {
       const latestEvent = eventLog[eventLog.length - 1];
       if (latestEvent && latestEvent.topics[1]) {
